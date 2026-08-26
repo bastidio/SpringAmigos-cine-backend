@@ -20,10 +20,9 @@ public class Orden {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
-    private Long usuario;
+    private Usuario usuario;
 
     @Column
     private Date fecha;

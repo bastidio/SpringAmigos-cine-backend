@@ -18,15 +18,13 @@ public class ItemOrden {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "orden_id", referencedColumnName = "id")
-    private Long orden;
+    private Orden orden;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "producto_id", referencedColumnName = "id")
-    private Long producto;
+    private Producto producto;
 
     @Column
     private Integer cantidad;

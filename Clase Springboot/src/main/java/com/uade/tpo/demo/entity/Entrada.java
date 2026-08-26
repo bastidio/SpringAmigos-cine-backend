@@ -18,20 +18,17 @@ public class Entrada {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "orden_id", referencedColumnName = "id")
-    private Long orden_id;
+    private Orden orden_id;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "funcion_id", referencedColumnName = "id")
-    private Long funcion_id;
+    private Funcion funcion_id;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "asiento_id", referencedColumnName = "id")
-    private Long asiento_id;
+    private Asiento asiento_id;
 
     @Column
     private Float precio;

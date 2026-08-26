@@ -20,15 +20,13 @@ public class Funcion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "pelicula_id", referencedColumnName = "id")
-    private Long pelicula;
+    private Pelicula pelicula;
 
-    @Column
     @ManyToOne
     @JoinColumn(name = "sala_id", referencedColumnName = "id")
-    private Long sala;
+    private Sala sala;
 
     @Column
     private Date horario;
