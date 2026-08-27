@@ -1,4 +1,4 @@
-package com.uade.tpo.marketplace.entity;
+package com.uade.tpo.demo.entity;
 
 import java.util.List;
 

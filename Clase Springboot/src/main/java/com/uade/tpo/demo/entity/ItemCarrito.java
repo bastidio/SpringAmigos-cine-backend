@@ -1,4 +1,4 @@
-package com.uade.tpo.marketplace.entity;
+package com.uade.tpo.demo.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,20 +18,20 @@ public class ItemCarrito {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    
     @ManyToOne
     @JoinColumn(name = "carrito_id", referencedColumnName = "id")
-    private Long carrito;
+    private Carrito carrito;
 
-    @Column
+   
     @ManyToOne
     @JoinColumn(name = "producto_id", referencedColumnName = "id")
-    private Long producto;
+    private Producto producto;
 
-    @Column
+   
     @ManyToOne
     @JoinColumn(name = "asiento_id", referencedColumnName = "id")
-    private Long asiento;
+    private Asiento asiento;
 
     @Column
     private Integer cantidad;

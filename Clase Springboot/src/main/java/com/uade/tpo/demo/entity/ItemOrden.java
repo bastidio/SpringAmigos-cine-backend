@@ -1,4 +1,4 @@
-package com.uade.tpo.marketplace.entity;
+package com.uade.tpo.demo.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,15 +18,15 @@ public class ItemOrden {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    
     @ManyToOne
     @JoinColumn(name = "orden_id", referencedColumnName = "id")
-    private Long orden;
+    private Orden orden;
 
-    @Column
+    
     @ManyToOne
     @JoinColumn(name = "producto_id", referencedColumnName = "id")
-    private Long producto;
+    private Producto producto;
 
     @Column
     private Integer cantidad;
