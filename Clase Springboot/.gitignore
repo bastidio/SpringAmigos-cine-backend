@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Mis reglas de seguridad (TPO) ###
+application.properties
