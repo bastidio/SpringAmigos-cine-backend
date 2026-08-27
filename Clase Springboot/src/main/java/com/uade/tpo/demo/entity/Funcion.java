@@ -1,4 +1,4 @@
-package com.uade.tpo.marketplace.entity;
+package com.uade.tpo.demo.entity;
 
 import java.sql.Date;
 
@@ -20,10 +20,12 @@ public class Funcion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    
     @ManyToOne
     @JoinColumn(name = "pelicula_id", referencedColumnName = "id")
     private Pelicula pelicula;
 
+  
     @ManyToOne
     @JoinColumn(name = "sala_id", referencedColumnName = "id")
     private Sala sala;
