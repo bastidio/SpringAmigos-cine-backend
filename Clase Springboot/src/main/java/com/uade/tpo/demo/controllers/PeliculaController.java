@@ -1,8 +1,8 @@
 package com.uade.tpo.demo.controllers;
 
-import com.uade.tpo.marketplace.entity.Pelicula;
-import com.uade.tpo.marketplace.entity.dto.PeliculaRequest;
-import com.uade.tpo.marketplace.service.PeliculaService;
+import com.uade.tpo.demo.entity.Pelicula;
+import com.uade.tpo.demo.entity.dto.PeliculaRequest;
+import com.uade.tpo.demo.service.PeliculaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

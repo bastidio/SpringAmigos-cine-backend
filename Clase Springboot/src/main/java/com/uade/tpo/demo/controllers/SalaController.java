@@ -1,8 +1,8 @@
 package com.uade.tpo.demo.controllers;
 
-import com.uade.tpo.marketplace.entity.Sala;
-import com.uade.tpo.marketplace.entity.dto.SalaRequest;
-import com.uade.tpo.marketplace.service.SalaService;
+import com.uade.tpo.demo.entity.Sala;
+import com.uade.tpo.demo.entity.dto.SalaRequest;
+import com.uade.tpo.demo.service.SalaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

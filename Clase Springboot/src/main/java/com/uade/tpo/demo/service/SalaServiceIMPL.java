@@ -1,9 +1,7 @@
 package com.uade.tpo.demo.service;
 
-package com.uade.tpo.marketplace.service;
-
-import com.uade.tpo.marketplace.entity.Sala;
-import com.uade.tpo.marketplace.repository.SalaRepository;
+import com.uade.tpo.demo.entity.Sala;
+import com.uade.tpo.demo.repository.SalaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

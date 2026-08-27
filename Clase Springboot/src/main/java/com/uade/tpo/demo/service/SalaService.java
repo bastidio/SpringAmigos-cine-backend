@@ -1,6 +1,6 @@
 package com.uade.tpo.demo.service;
 
-import com.uade.tpo.marketplace.entity.Sala;
+import com.uade.tpo.demo.entity.Sala;
 import java.util.List;
 import java.util.Optional;
 
