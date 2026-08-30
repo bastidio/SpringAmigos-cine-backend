@@ -62,12 +62,19 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 itemOrden.setOrden(nuevaOrden);
                 itemOrden.setProducto(item.getProducto());
                 itemOrden.setCantidad(item.getCantidad());
-                itemOrden.setPrecio_unitario(item.getProducto().getPrecio());
+                
+                
+                Float precioUnitario = item.getProducto().getPrecio();
+                Float descuento = item.getProducto().getDescuento() != null ? item.getProducto().getDescuento() : 0f;
                 
                 itemOrdenRepository.save(itemOrden);
+
+                Float precioConDescuento = precioUnitario - (precioUnitario * descuento / 100f);
                 
                 
-                totalCalculado += (item.getProducto().getPrecio() * item.getCantidad());
+                itemOrden.setPrecio_unitario(precioConDescuento);;
+                itemOrdenRepository.save(itemOrden);
+                totalCalculado += (precioConDescuento * item.getCantidad());
                 
             } else if (item.getAsiento() != null && carrito.getFuncion() != null) {
                 Entrada entrada = new Entrada();
