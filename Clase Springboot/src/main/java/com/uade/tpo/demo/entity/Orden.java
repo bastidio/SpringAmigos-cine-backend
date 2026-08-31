@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.entity;
 
 import java.sql.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,10 +12,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.Builder;
 
 @Entity
 @Data
 @Table(name = "orden")
+
 public class Orden {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +29,7 @@ public class Orden {
     private Usuario usuario;
 
     @Column
-    private Date fecha;
+    private LocalDateTime fecha;
 
     @Column
     private Float total;
