@@ -5,8 +5,6 @@ import com.uade.tpo.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.sql.Date;
 import java.util.List;
 
 @Service
@@ -43,7 +41,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
         usuario.setId(usuarioId);
         nuevaOrden.setUsuario(usuario);
         
-        nuevaOrden.setFecha(new Date(System.currentTimeMillis())); // Fecha actual
+        nuevaOrden.setFecha(java.time.LocalDateTime.now()); // Fecha actual
         nuevaOrden.setEstado("CONFIRMADA");
         nuevaOrden.setTotal(0f);
 
@@ -94,7 +92,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
         nuevaOrden.setTotal(totalCalculado);
         ordenRepository.save(nuevaOrden);
 
-        // 6. se borra el carrito para una nueva vida jeje
+        // 6. se borra el los items del carrito para una nueva vida jeje
         itemCarritoRepository.deleteAll(items);
 
         return nuevaOrden;
