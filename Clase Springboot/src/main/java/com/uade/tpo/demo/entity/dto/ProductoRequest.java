@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.entity.dto;
 
+import java.util.List;
+
 import lombok.Data;
 
 @Data
@@ -10,5 +12,5 @@ public class ProductoRequest {
     private Float precio;
     private Integer stock;
     private Float descuento;
-    private String imagen_url;
+    private List<String> imagenes;
 }

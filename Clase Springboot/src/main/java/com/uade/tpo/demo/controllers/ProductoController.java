@@ -1,8 +1,10 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Producto;
+import com.uade.tpo.demo.entity.dto.ImagenProductoRequest;
 import com.uade.tpo.demo.entity.dto.ProductoRequest;
 import com.uade.tpo.demo.entity.dto.StockRequest;
+import com.uade.tpo.demo.exceptions.ImagenProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.service.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +49,7 @@ public class ProductoController {
                 request.getPrecio(),
                 request.getStock(),
                 request.getDescuento(),
-                request.getImagen_url()
+                request.getImagenes()
         );
         return ResponseEntity.created(URI.create("/productos/" + nuevoProducto.getId())).body(nuevoProducto);
     }
@@ -62,8 +64,7 @@ public class ProductoController {
                 request.getDescripcion(),
                 request.getPrecio(),
                 request.getStock(),
-                request.getDescuento(),
-                request.getImagen_url()
+                request.getDescuento()
         );
         return ResponseEntity.ok(productoActualizado);
     }
@@ -77,6 +78,18 @@ public class ProductoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProducto(@PathVariable Long id) throws ProductoNotFoundException {
         productoService.deleteProducto(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/imagenes")
+    public ResponseEntity<Producto> agregarImagen(@PathVariable Long id, @RequestBody ImagenProductoRequest request) throws ProductoNotFoundException {
+        Producto productoActualizado = productoService.agregarImagen(id, request.getUrl());
+        return ResponseEntity.created(URI.create("/productos/" + id)).body(productoActualizado);
+    }
+
+    @DeleteMapping("/{id}/imagenes/{imagenId}")
+    public ResponseEntity<Void> eliminarImagen(@PathVariable Long id, @PathVariable Long imagenId) throws ProductoNotFoundException, ImagenProductoNotFoundException {
+        productoService.eliminarImagen(id, imagenId);
         return ResponseEntity.noContent().build();
     }
 }
