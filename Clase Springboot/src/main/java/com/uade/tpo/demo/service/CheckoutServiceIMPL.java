@@ -27,7 +27,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
     private ItemCarritoRepository itemCarritoRepository;
 
     @Override
-    @Transactional // boton de emegencia jeje
+    @Transactional // boton de emegencia
     public Orden procesarCheckout(Long usuarioId) {
         
         // 1. buqueda x id bbto

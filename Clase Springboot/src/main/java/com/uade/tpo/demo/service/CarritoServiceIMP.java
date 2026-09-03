@@ -81,7 +81,7 @@ public class CarritoServiceIMP implements CarritoService {
         // construimos
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
         
-        // enlistas los items del carrito brooo
+        // enlistas los items del carrito
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
         
         Float total = 0f;
