@@ -9,8 +9,14 @@ import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
+import com.uade.tpo.demo.repository.AsientoRepository;
 import com.uade.tpo.demo.repository.CarritoRepository;
 import com.uade.tpo.demo.repository.ItemCarritoRepository;
+import com.uade.tpo.demo.repository.ProductoRepository;
+import com.uade.tpo.demo.repository.UsuarioRepository;
 import java.util.List;
 
 @Service
@@ -19,64 +25,70 @@ public class CarritoServiceIMP implements CarritoService {
     private CarritoRepository carritoRepository;
     @Autowired
     private ItemCarritoRepository itemCarritoRepository;
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+    @Autowired
+    private ProductoRepository productoRepository;
+    @Autowired
+    private AsientoRepository asientoRepository;
 
     @Override
-    public Carrito obtenerCarritoPorUsuario(Long usuarioId) {
+    public Carrito obtenerCarritoPorUsuario(Long usuarioId) throws UsuarioNotFoundException {
         Optional<Carrito> carritoExistente = carritoRepository.findByUsuarioId(usuarioId);
 
         if (carritoExistente.isPresent()) {
             return carritoExistente.get();
         } else {
+            Usuario usuario = usuarioRepository.findById(usuarioId)
+                    .orElseThrow(UsuarioNotFoundException::new);
+
             Carrito nuevoCarrito = new Carrito();
-            
-            Usuario usuario = new Usuario();
-            usuario.setId(usuarioId);
-            
-            nuevoCarrito.setUsuario(usuario); 
-            
+            nuevoCarrito.setUsuario(usuario);
+
             return carritoRepository.save(nuevoCarrito);
         }
     }
 
     @Override
-    public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Integer cantidad) {
-        
+    public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Integer cantidad)
+            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException {
+
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
-        
+
         ItemCarrito nuevoItem = new ItemCarrito();
         nuevoItem.setCarrito(carrito);
         nuevoItem.setCantidad(cantidad);
 
-       
+
         if (productoId != null) {
-            Producto producto = new Producto();
-            producto.setId(productoId);
+            Producto producto = productoRepository.findById(productoId)
+                    .orElseThrow(ProductoNotFoundException::new);
             nuevoItem.setProducto(producto);
-        } 
-       
+        }
+
         else if (asientoId != null) {
-            Asiento asiento = new Asiento();
-            asiento.setId(asientoId);
+            Asiento asiento = asientoRepository.findById(asientoId)
+                    .orElseThrow(AsientoNotFoundException::new);
             nuevoItem.setAsiento(asiento);
         }
 
-   
+
         itemCarritoRepository.save(nuevoItem);
 
-      
+
         return carrito;
     }
 
     @Override
-    public Carrito eliminarItem(Long usuarioId, Long itemCarritoId) {
+    public Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException {
         itemCarritoRepository.deleteById(itemCarritoId);
-        
+
         return this.obtenerCarritoPorUsuario(usuarioId);
     }
 
     @Override
-    public Float calcularTotal(Long usuarioId) {
+    public Float calcularTotal(Long usuarioId) throws UsuarioNotFoundException {
         
         // construimos
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
@@ -112,7 +124,7 @@ public class CarritoServiceIMP implements CarritoService {
         return total;
     }
     @Override
-    public void vaciarCarrito(Long usuarioId) {
+    public void vaciarCarrito(Long usuarioId) throws UsuarioNotFoundException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
         itemCarritoRepository.deleteAllByCarrito(carrito);
     }

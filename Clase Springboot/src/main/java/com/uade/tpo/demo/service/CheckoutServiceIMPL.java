@@ -36,11 +36,9 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
         // 2. Creacion de la orden bro
         Orden nuevaOrden = new Orden();
-        
-        Usuario usuario = new Usuario();
-        usuario.setId(usuarioId);
-        nuevaOrden.setUsuario(usuario);
-        
+
+        nuevaOrden.setUsuario(carrito.getUsuario());
+
         nuevaOrden.setFecha(java.time.LocalDateTime.now()); // Fecha actual
         nuevaOrden.setEstado("CONFIRMADA");
         nuevaOrden.setTotal(0f);

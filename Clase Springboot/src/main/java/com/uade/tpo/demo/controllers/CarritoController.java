@@ -2,6 +2,9 @@ package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.dto.ItemCarritoRequest;
+import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
 import com.uade.tpo.demo.service.CarritoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +20,7 @@ public class CarritoController {
     private CarritoService carritoService;
 
     @GetMapping("/{usuarioId}")
-    public ResponseEntity<Carrito> getCarritoPorUsuario(@PathVariable Long usuarioId) {
+    public ResponseEntity<Carrito> getCarritoPorUsuario(@PathVariable Long usuarioId) throws UsuarioNotFoundException {
         Carrito carrito = carritoService.obtenerCarritoPorUsuario(usuarioId);
         if (carrito != null) {
             return ResponseEntity.ok(carrito);
@@ -28,8 +31,9 @@ public class CarritoController {
     @PostMapping("/{usuarioId}/items")
     public ResponseEntity<Carrito> agregarItem(
             @PathVariable Long usuarioId,
-            @RequestBody ItemCarritoRequest request) {
-        
+            @RequestBody ItemCarritoRequest request)
+            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException {
+
         Carrito carritoActualizado = carritoService.agregarItem(
                 usuarioId,
                 request.getProductoId(), 
@@ -43,22 +47,22 @@ public class CarritoController {
 
     @DeleteMapping("/{usuarioId}/items/{itemCarritoId}")
     public ResponseEntity<Carrito> eliminarItem(
-            @PathVariable Long usuarioId, 
-            @PathVariable Long itemCarritoId) {
-        
+            @PathVariable Long usuarioId,
+            @PathVariable Long itemCarritoId) throws UsuarioNotFoundException {
+
         Carrito carritoActualizado = carritoService.eliminarItem(usuarioId, itemCarritoId);
         return ResponseEntity.ok(carritoActualizado);
     }
 
     @DeleteMapping("/{usuarioId}")
-    public ResponseEntity<Void> vaciarCarrito(@PathVariable Long usuarioId) {
+    public ResponseEntity<Void> vaciarCarrito(@PathVariable Long usuarioId) throws UsuarioNotFoundException {
         carritoService.vaciarCarrito(usuarioId);
         // Devolvemos 204 No Content indicando que la operación fue exitosa pero no hay body
         return ResponseEntity.noContent().build(); 
     }
 
     @GetMapping("/{usuarioId}/total")
-    public ResponseEntity<Float> calcularTotal(@PathVariable Long usuarioId) {
+    public ResponseEntity<Float> calcularTotal(@PathVariable Long usuarioId) throws UsuarioNotFoundException {
         Float total = carritoService.calcularTotal(usuarioId);
         return ResponseEntity.ok(total);
     }
