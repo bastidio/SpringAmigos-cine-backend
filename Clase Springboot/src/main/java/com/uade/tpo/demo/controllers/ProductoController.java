@@ -21,8 +21,12 @@ public class ProductoController {
     private ProductoService productoService;
 
     @GetMapping
-    public ResponseEntity<List<Producto>> getProductos() {
-        return ResponseEntity.ok(productoService.getProductos());
+    public ResponseEntity<List<Producto>> getProductos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Long categoriaId,
+            @RequestParam(required = false) Float precioMin,
+            @RequestParam(required = false) Float precioMax) {
+        return ResponseEntity.ok(productoService.getProductos(nombre, categoriaId, precioMin, precioMax));
     }
 
     @GetMapping("/{id}")

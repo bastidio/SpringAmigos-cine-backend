@@ -5,7 +5,9 @@ import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.repository.CategoriaRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
+import com.uade.tpo.demo.repository.ProductoSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,8 +23,23 @@ public class ProductoServiceIMPL implements ProductoService {
     private CategoriaRepository categoriaRepository;
 
     @Override
-    public List<Producto> getProductos() {
-        return productoRepository.findAll();
+    public List<Producto> getProductos(String nombre, Long categoriaId, Float precioMin, Float precioMax) {
+        Specification<Producto> spec = Specification.where(null);
+
+        if (nombre != null && !nombre.isBlank()) {
+            spec = spec.and(ProductoSpecifications.nombreContiene(nombre));
+        }
+        if (categoriaId != null) {
+            spec = spec.and(ProductoSpecifications.categoriaEs(categoriaId));
+        }
+        if (precioMin != null) {
+            spec = spec.and(ProductoSpecifications.precioMayorOIgualQue(precioMin));
+        }
+        if (precioMax != null) {
+            spec = spec.and(ProductoSpecifications.precioMenorOIgualQue(precioMax));
+        }
+
+        return productoRepository.findAll(spec);
     }
 
     @Override
