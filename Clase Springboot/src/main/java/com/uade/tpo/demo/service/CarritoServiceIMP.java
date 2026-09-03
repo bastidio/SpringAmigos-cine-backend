@@ -18,6 +18,7 @@ import com.uade.tpo.demo.repository.CarritoRepository;
 import com.uade.tpo.demo.repository.ItemCarritoRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
 import com.uade.tpo.demo.repository.UsuarioRepository;
+import com.uade.tpo.demo.util.PrecioUtils;
 import java.util.List;
 
 @Service
@@ -110,8 +111,8 @@ public class CarritoServiceIMP implements CarritoService {
             
             //precio del producto
             if (item.getProducto() != null) {
-                precioItem = item.getProducto().getPrecio(); 
-            } 
+                precioItem = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
+            }
 
             else if (item.getAsiento() != null) {
                 //

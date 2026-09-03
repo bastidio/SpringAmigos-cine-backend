@@ -4,6 +4,7 @@ import com.uade.tpo.demo.entity.*;
 import com.uade.tpo.demo.exceptions.CarritoVacioException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.repository.*;
+import com.uade.tpo.demo.util.PrecioUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,14 +86,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 itemOrden.setCantidad(item.getCantidad());
                 
                 
-                Float precioUnitario = item.getProducto().getPrecio();
-                Float descuento = item.getProducto().getDescuento() != null ? item.getProducto().getDescuento() : 0f;
-                
                 itemOrdenRepository.save(itemOrden);
 
-                Float precioConDescuento = precioUnitario - (precioUnitario * descuento / 100f);
-                
-                
+                Float precioConDescuento = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
+
+
                 itemOrden.setPrecio_unitario(precioConDescuento);;
                 itemOrdenRepository.save(itemOrden);
                 totalCalculado += (precioConDescuento * item.getCantidad());
