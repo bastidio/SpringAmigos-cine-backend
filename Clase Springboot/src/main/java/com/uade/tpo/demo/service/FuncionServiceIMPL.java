@@ -9,7 +9,7 @@ import com.uade.tpo.demo.repository.SalaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +36,7 @@ public class FuncionServiceIMPL implements FuncionService {
     }
 
     @Override
-    public Funcion createFuncion(Long peliculaId, Long salaId, Date horario, String idioma, String formato, Float precioBase) {
+    public Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, Float precioBase) {
         Pelicula pelicula = peliculaRepository.findById(peliculaId).orElseThrow();
         Sala sala = salaRepository.findById(salaId).orElseThrow();
 

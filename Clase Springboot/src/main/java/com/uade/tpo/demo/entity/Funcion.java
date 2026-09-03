@@ -1,6 +1,6 @@
 package com.uade.tpo.demo.entity;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,7 +31,7 @@ public class Funcion {
     private Sala sala;
 
     @Column
-    private Date horario;
+    private LocalDateTime horario;
 
     @Column
     private String idioma;
