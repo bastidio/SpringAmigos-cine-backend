@@ -1,10 +1,8 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Orden;
-import com.uade.tpo.demo.entity.dto.OrdenRequest;
 import com.uade.tpo.demo.service.OrdenService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,13 +14,6 @@ public class OrdenController {
 
     @Autowired
     private OrdenService ordenService;
-
-    // POST /ordenes -> Crear una nueva orden
-    @PostMapping
-    public ResponseEntity<Orden> crearOrden(@RequestBody OrdenRequest request) {
-        Orden nuevaOrden = ordenService.createOrden(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevaOrden);
-    }
 
     // GET /ordenes/{id} -> Obtener orden por su ID
     @GetMapping("/{id}")
