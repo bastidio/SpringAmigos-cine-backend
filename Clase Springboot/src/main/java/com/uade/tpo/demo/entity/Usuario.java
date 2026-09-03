@@ -68,33 +68,45 @@ public class Usuario implements UserDetails {
     @EqualsAndHashCode.Exclude
     private List<Orden> orders;
 
+    // Desviacion deliberada del modelo de clase: @JsonIgnore en los seis getters
+    // heredados de UserDetails de aca para abajo. Sin esto, Jackson los serializa
+    // como si fueran propiedades del bean (authorities, accountNonExpired, etc.)
+    // y el JSON de cualquier Usuario -incluido el que viaja dentro de Orden- se
+    // ensucia con datos de autenticacion que no son del dominio.
+
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(rol.name()));
     }
 
     // El identificador de login es el email (ver UsuarioRepository.findByEmail).
     @Override
+    @JsonIgnore
     public String getUsername() {
         return email;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @JsonIgnore
     public boolean isEnabled() {
         return true;
     }
