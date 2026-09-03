@@ -1,11 +1,12 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Sala;
+import com.uade.tpo.demo.exceptions.SalaNotFoundException;
+
 import java.util.List;
-import java.util.Optional;
 
 public interface SalaService {
     List<Sala> getSalas();
-    Optional<Sala> getSalaById(Long id);
+    Sala getSalaById(Long id) throws SalaNotFoundException;
     Sala createSala(String nombre, Integer capacidad);
 }

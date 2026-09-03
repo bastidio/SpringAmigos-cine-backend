@@ -1,12 +1,13 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Categoria;
+import com.uade.tpo.demo.exceptions.CategoriaDuplicateException;
+import com.uade.tpo.demo.exceptions.CategoriaNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface CategoriaService {
     List<Categoria> getCategorias();
-    Optional<Categoria> getCategoriaById(Long id);
-    Categoria createCategoria(String nombre);
+    Categoria getCategoriaById(Long id) throws CategoriaNotFoundException;
+    Categoria createCategoria(String nombre) throws CategoriaDuplicateException;
 }

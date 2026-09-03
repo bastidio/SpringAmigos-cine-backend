@@ -4,11 +4,10 @@ import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ProductoService {
     List<Producto> getProductos(String nombre, Long categoriaId, Float precioMin, Float precioMax);
-    Optional<Producto> getProductoById(Long id);
+    Producto getProductoById(Long id) throws ProductoNotFoundException;
 
     Producto createProducto(Long categoriaId, String nombre, String descripcion, Float precio, Integer stock, Float descuento, String imagenUrl);
 

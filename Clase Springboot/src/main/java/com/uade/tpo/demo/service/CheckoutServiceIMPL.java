@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.*;
+import com.uade.tpo.demo.exceptions.CarritoNotFoundException;
 import com.uade.tpo.demo.exceptions.CarritoVacioException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.repository.*;
@@ -34,11 +35,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
     @Override
     @Transactional // boton de emegencia
-    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException {
+    public Orden procesarCheckout(Long usuarioId) throws CarritoNotFoundException, CarritoVacioException, StockInsuficienteException {
 
         // 1. buqueda x id
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("No se encontró el carrito"));
+                .orElseThrow(CarritoNotFoundException::new);
 
         // 1.1. los item del carrito x id el metodo echo x nosostros(mente colmena)
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);

@@ -11,7 +11,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductoServiceIMPL implements ProductoService {
@@ -43,8 +42,9 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
-    public Optional<Producto> getProductoById(Long id) {
-        return productoRepository.findById(id);
+    public Producto getProductoById(Long id) throws ProductoNotFoundException {
+        return productoRepository.findById(id)
+                .orElseThrow(ProductoNotFoundException::new);
     }
 
     @Override

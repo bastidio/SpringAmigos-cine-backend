@@ -2,6 +2,10 @@ package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.entity.dto.FuncionRequest;
+import com.uade.tpo.demo.exceptions.FuncionDuplicateException;
+import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
+import com.uade.tpo.demo.exceptions.PeliculaNotFoundException;
+import com.uade.tpo.demo.exceptions.SalaNotFoundException;
 import com.uade.tpo.demo.service.FuncionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/funciones")
@@ -24,16 +27,14 @@ public class FuncionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Funcion> getFuncionById(@PathVariable Long id) {
-        Optional<Funcion> result = funcionService.getFuncionById(id);
-        if (result.isPresent()) {
-            return ResponseEntity.ok(result.get());
-        }
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Funcion> getFuncionById(@PathVariable Long id) throws FuncionNotFoundException {
+        Funcion funcion = funcionService.getFuncionById(id);
+        return ResponseEntity.ok(funcion);
     }
 
     @PostMapping
-    public ResponseEntity<Funcion> createFuncion(@RequestBody FuncionRequest request) {
+    public ResponseEntity<Funcion> createFuncion(@RequestBody FuncionRequest request)
+            throws PeliculaNotFoundException, SalaNotFoundException, FuncionDuplicateException {
         Funcion nuevaFuncion = funcionService.createFuncion(
                 request.getPeliculaId(),
                 request.getSalaId(),

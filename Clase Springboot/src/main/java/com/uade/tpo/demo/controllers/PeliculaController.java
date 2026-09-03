@@ -2,6 +2,8 @@ package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Pelicula;
 import com.uade.tpo.demo.entity.dto.PeliculaRequest;
+import com.uade.tpo.demo.exceptions.PeliculaDuplicateException;
+import com.uade.tpo.demo.exceptions.PeliculaNotFoundException;
 import com.uade.tpo.demo.service.PeliculaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/peliculas")
@@ -26,17 +27,14 @@ public class PeliculaController {
 
     // GET: Buscar una peli específica
     @GetMapping("/{id}")
-    public ResponseEntity<Pelicula> getPeliculaById(@PathVariable Long id) {
-        Optional<Pelicula> result = peliculaService.getPeliculaById(id);
-        if (result.isPresent()) {
-            return ResponseEntity.ok(result.get());
-        }
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Pelicula> getPeliculaById(@PathVariable Long id) throws PeliculaNotFoundException {
+        Pelicula pelicula = peliculaService.getPeliculaById(id);
+        return ResponseEntity.ok(pelicula);
     }
 
     // POST: Agregar una nueva película a la cartelera
     @PostMapping
-    public ResponseEntity<Pelicula> createPelicula(@RequestBody PeliculaRequest request) {
+    public ResponseEntity<Pelicula> createPelicula(@RequestBody PeliculaRequest request) throws PeliculaDuplicateException {
         Pelicula nuevaPelicula = peliculaService.createPelicula(
                 request.getTitulo(),
                 request.getSinopsis(),

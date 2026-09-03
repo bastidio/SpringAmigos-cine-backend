@@ -1,12 +1,12 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Sala;
+import com.uade.tpo.demo.exceptions.SalaNotFoundException;
 import com.uade.tpo.demo.repository.SalaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SalaServiceIMPL implements SalaService {
@@ -20,8 +20,9 @@ public class SalaServiceIMPL implements SalaService {
     }
 
     @Override
-    public Optional<Sala> getSalaById(Long id) {
-        return salaRepository.findById(id); 
+    public Sala getSalaById(Long id) throws SalaNotFoundException {
+        return salaRepository.findById(id)
+                .orElseThrow(SalaNotFoundException::new);
     }
 
     @Override

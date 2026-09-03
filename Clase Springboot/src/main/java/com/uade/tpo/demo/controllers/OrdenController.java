@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Orden;
+import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import com.uade.tpo.demo.service.OrdenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class OrdenController {
 
     // GET /ordenes/{id} -> Obtener orden por su ID
     @GetMapping("/{id}")
-    public ResponseEntity<Orden> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<Orden> obtenerPorId(@PathVariable Long id) throws OrdenNotFoundException {
         Orden orden = ordenService.getOrdenById(id);
         return ResponseEntity.ok(orden);
     }
@@ -38,7 +39,7 @@ public class OrdenController {
 
     // PUT /ordenes/{id}/cancelar -> Cancelar una orden
     @PutMapping("/{id}/cancelar")
-    public ResponseEntity<Orden> cancelarOrden(@PathVariable Long id) {
+    public ResponseEntity<Orden> cancelarOrden(@PathVariable Long id) throws OrdenNotFoundException {
         Orden ordenCancelada = ordenService.cancelOrden(id);
         return ResponseEntity.ok(ordenCancelada);
     }

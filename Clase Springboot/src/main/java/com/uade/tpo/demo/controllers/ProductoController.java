@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/productos")
@@ -30,12 +29,9 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Producto> getProductoById(@PathVariable Long id) {
-        Optional<Producto> result = productoService.getProductoById(id);
-        if (result.isPresent()) {
-            return ResponseEntity.ok(result.get());
-        }
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Producto> getProductoById(@PathVariable Long id) throws ProductoNotFoundException {
+        Producto producto = productoService.getProductoById(id);
+        return ResponseEntity.ok(producto);
     }
 
     @PostMapping

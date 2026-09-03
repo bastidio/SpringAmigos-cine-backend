@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Orden;
+import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import com.uade.tpo.demo.repository.OrdenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,9 +15,9 @@ public class OrdenServiceIMPL implements OrdenService {
     private OrdenRepository ordenRepository;
 
     @Override
-    public Orden getOrdenById(Long id) {
+    public Orden getOrdenById(Long id) throws OrdenNotFoundException {
         return ordenRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
+                .orElseThrow(OrdenNotFoundException::new);
     }
 
     @Override
@@ -30,7 +31,7 @@ public class OrdenServiceIMPL implements OrdenService {
     }
 
     @Override
-    public Orden cancelOrden(Long id) {
+    public Orden cancelOrden(Long id) throws OrdenNotFoundException {
         Orden orden = getOrdenById(id);
         orden.setEstado("Cancelada");
         return ordenRepository.save(orden);
