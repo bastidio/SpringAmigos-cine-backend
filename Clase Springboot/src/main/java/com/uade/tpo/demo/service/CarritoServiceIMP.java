@@ -10,6 +10,7 @@ import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.ItemCarritoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
@@ -57,41 +58,82 @@ public class CarritoServiceIMP implements CarritoService {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
-
-        ItemCarrito nuevoItem = new ItemCarrito();
-        nuevoItem.setCarrito(carrito);
-        nuevoItem.setCantidad(cantidad);
-
-
         if (productoId != null) {
             Producto producto = productoRepository.findById(productoId)
                     .orElseThrow(ProductoNotFoundException::new);
 
-            if (producto.getStock() == null || producto.getStock() < cantidad) {
-                throw new StockInsuficienteException();
-            }
+            Optional<ItemCarrito> itemExistente = itemCarritoRepository.findByCarritoAndProducto(carrito, producto);
 
-            nuevoItem.setProducto(producto);
+            if (itemExistente.isPresent()) {
+                ItemCarrito item = itemExistente.get();
+                Integer cantidadTotal = item.getCantidad() + cantidad;
+
+                if (producto.getStock() == null || producto.getStock() < cantidadTotal) {
+                    throw new StockInsuficienteException();
+                }
+
+                item.setCantidad(cantidadTotal);
+                itemCarritoRepository.save(item);
+            } else {
+                if (producto.getStock() == null || producto.getStock() < cantidad) {
+                    throw new StockInsuficienteException();
+                }
+
+                ItemCarrito nuevoItem = new ItemCarrito();
+                nuevoItem.setCarrito(carrito);
+                nuevoItem.setCantidad(cantidad);
+                nuevoItem.setProducto(producto);
+
+                itemCarritoRepository.save(nuevoItem);
+            }
         }
 
         else if (asientoId != null) {
             Asiento asiento = asientoRepository.findById(asientoId)
                     .orElseThrow(AsientoNotFoundException::new);
+
+            ItemCarrito nuevoItem = new ItemCarrito();
+            nuevoItem.setCarrito(carrito);
+            nuevoItem.setCantidad(cantidad);
             nuevoItem.setAsiento(asiento);
+
+            itemCarritoRepository.save(nuevoItem);
         }
-
-
-        itemCarritoRepository.save(nuevoItem);
-
 
         return carrito;
     }
 
     @Override
-    public Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException {
-        itemCarritoRepository.deleteById(itemCarritoId);
+    public Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException {
+        Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
-        return this.obtenerCarritoPorUsuario(usuarioId);
+        ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
+                .orElseThrow(ItemCarritoNotFoundException::new);
+
+        itemCarritoRepository.delete(item);
+
+        return carrito;
+    }
+
+    @Override
+    public Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException {
+        Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
+
+        ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
+                .orElseThrow(ItemCarritoNotFoundException::new);
+
+        if (item.getProducto() != null) {
+            Producto producto = item.getProducto();
+            if (producto.getStock() == null || producto.getStock() < nuevaCantidad) {
+                throw new StockInsuficienteException();
+            }
+        }
+
+        item.setCantidad(nuevaCantidad);
+        itemCarritoRepository.save(item);
+
+        return carrito;
     }
 
     @Override

@@ -1,8 +1,10 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.dto.CantidadRequest;
 import com.uade.tpo.demo.entity.dto.ItemCarritoRequest;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.ItemCarritoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
@@ -49,9 +51,20 @@ public class CarritoController {
     @DeleteMapping("/{usuarioId}/items/{itemCarritoId}")
     public ResponseEntity<Carrito> eliminarItem(
             @PathVariable Long usuarioId,
-            @PathVariable Long itemCarritoId) throws UsuarioNotFoundException {
+            @PathVariable Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException {
 
         Carrito carritoActualizado = carritoService.eliminarItem(usuarioId, itemCarritoId);
+        return ResponseEntity.ok(carritoActualizado);
+    }
+
+    @PutMapping("/{usuarioId}/items/{itemCarritoId}")
+    public ResponseEntity<Carrito> modificarCantidad(
+            @PathVariable Long usuarioId,
+            @PathVariable Long itemCarritoId,
+            @RequestBody CantidadRequest request)
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException {
+
+        Carrito carritoActualizado = carritoService.modificarCantidad(usuarioId, itemCarritoId, request.getCantidad());
         return ResponseEntity.ok(carritoActualizado);
     }
 

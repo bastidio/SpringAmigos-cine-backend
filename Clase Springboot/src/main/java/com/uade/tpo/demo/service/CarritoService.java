@@ -2,6 +2,7 @@ package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.ItemCarritoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
@@ -14,7 +15,9 @@ public interface CarritoService {
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException;
 
 
-    Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException;
+    Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException;
+
+    Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad) throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException;
 
     Float calcularTotal(Long usuarioId) throws UsuarioNotFoundException;
 
