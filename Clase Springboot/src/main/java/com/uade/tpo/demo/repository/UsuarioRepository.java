@@ -8,6 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    // Este método nos va a servir más adelante para el Login con JWT, cuando se haga borrenme 
-    Optional<Usuario> findByUsername(String username);
+    // El login es por email: lo usan UserDetailsService y AuthenticationService.
+    Optional<Usuario> findByEmail(String email);
+
+    boolean existsByEmail(String email);
 }

@@ -16,7 +16,7 @@ public class UsuarioServiceIMPL implements UsuarioService {
     public Usuario registrarUsuario(String username, String email, String password, String nombre, String apellido) {
         
         Usuario nuevoUsuario = new Usuario();
-        nuevoUsuario.setUsername(username);
+        nuevoUsuario.setNombreUsuario(username);
         nuevoUsuario.setEmail(email);
         
         // despues tkn
@@ -26,7 +26,7 @@ public class UsuarioServiceIMPL implements UsuarioService {
         nuevoUsuario.setApellido(apellido);
 
 
-        nuevoUsuario.setRol(Rol.USER.name()); 
+        nuevoUsuario.setRol(Rol.USER); 
 
         return usuarioRepository.save(nuevoUsuario);
     }
