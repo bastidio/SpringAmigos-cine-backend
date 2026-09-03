@@ -1,6 +1,8 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.*;
+import com.uade.tpo.demo.exceptions.CarritoVacioException;
+import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,15 +28,35 @@ public class CheckoutServiceIMPL implements CheckoutService {
     @Autowired
     private ItemCarritoRepository itemCarritoRepository;
 
+    @Autowired
+    private ProductoRepository productoRepository;
+
     @Override
     @Transactional // boton de emegencia
-    public Orden procesarCheckout(Long usuarioId) {
-        
-        // 1. buqueda x id bbto
+    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException {
+
+        // 1. buqueda x id
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new RuntimeException("No se encontró el carrito"));
 
-        // 2. Creacion de la orden bro
+        // 1.1. los item del carrito x id el metodo echo x nosostros(mente colmena)
+        List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
+
+        if (items.isEmpty()) {
+            throw new CarritoVacioException();
+        }
+
+        // 1.2. validamos el stock de todos los items de producto ANTES de confirmar nada
+        for (ItemCarrito item : items) {
+            if (item.getProducto() != null) {
+                Producto producto = item.getProducto();
+                if (producto.getStock() == null || producto.getStock() < item.getCantidad()) {
+                    throw new StockInsuficienteException();
+                }
+            }
+        }
+
+        // 2. Creacion de la orden
         Orden nuevaOrden = new Orden();
 
         nuevaOrden.setUsuario(carrito.getUsuario());
@@ -43,17 +65,20 @@ public class CheckoutServiceIMPL implements CheckoutService {
         nuevaOrden.setEstado("CONFIRMADA");
         nuevaOrden.setTotal(0f);
 
-        
+
         nuevaOrden = ordenRepository.save(nuevaOrden);
 
-        // 3.los item del carrito x id el metodo echo x nosostros(mente colmena)
-        List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
         float totalCalculado = 0f;
 
-        // 4. for each 
+        
         for (ItemCarrito item : items) {
-            
+
             if (item.getProducto() != null) {
+                // Descontamos el stock del producto real al confirmar
+                Producto producto = item.getProducto();
+                producto.setStock(producto.getStock() - item.getCantidad());
+                productoRepository.save(producto);
+
                 ItemOrden itemOrden = new ItemOrden();
                 itemOrden.setOrden(nuevaOrden);
                 itemOrden.setProducto(item.getProducto());
@@ -86,11 +111,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
             }
         }
 
-        // 5. Actualizacion total y guardamiento de esta ya tu sabe
+        // 5. Actualizacion total
         nuevaOrden.setTotal(totalCalculado);
         ordenRepository.save(nuevaOrden);
 
-        // 6. se borra el los items del carrito para una nueva vida jeje
+        // 6. se borra el los items del carrito
         itemCarritoRepository.deleteAll(items);
 
         return nuevaOrden;

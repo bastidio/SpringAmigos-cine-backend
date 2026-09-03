@@ -11,6 +11,7 @@ import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
 import com.uade.tpo.demo.repository.AsientoRepository;
 import com.uade.tpo.demo.repository.CarritoRepository;
@@ -51,7 +52,7 @@ public class CarritoServiceIMP implements CarritoService {
 
     @Override
     public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Integer cantidad)
-            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException {
+            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
@@ -64,6 +65,11 @@ public class CarritoServiceIMP implements CarritoService {
         if (productoId != null) {
             Producto producto = productoRepository.findById(productoId)
                     .orElseThrow(ProductoNotFoundException::new);
+
+            if (producto.getStock() == null || producto.getStock() < cantidad) {
+                throw new StockInsuficienteException();
+            }
+
             nuevoItem.setProducto(producto);
         }
 

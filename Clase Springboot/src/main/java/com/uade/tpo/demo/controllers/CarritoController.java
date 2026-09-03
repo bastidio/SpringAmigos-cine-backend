@@ -4,6 +4,7 @@ import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.dto.ItemCarritoRequest;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
 import com.uade.tpo.demo.service.CarritoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,7 @@ public class CarritoController {
     public ResponseEntity<Carrito> agregarItem(
             @PathVariable Long usuarioId,
             @RequestBody ItemCarritoRequest request)
-            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException {
+            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException {
 
         Carrito carritoActualizado = carritoService.agregarItem(
                 usuarioId,
