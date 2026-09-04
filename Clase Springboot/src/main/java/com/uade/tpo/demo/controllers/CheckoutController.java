@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
+
 import java.net.URI;
 
 @RestController
@@ -21,7 +23,7 @@ public class CheckoutController {
 
     @PostMapping
     public ResponseEntity<Orden> procesarCheckout(@AuthenticationPrincipal Usuario usuario)
-            throws CarritoVacioException, StockInsuficienteException {
+            throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException {
         Orden ordenConfirmada = checkoutService.procesarCheckout(usuario.getId());
         return ResponseEntity.created(URI.create("/api/checkout")).body(ordenConfirmada);
     }

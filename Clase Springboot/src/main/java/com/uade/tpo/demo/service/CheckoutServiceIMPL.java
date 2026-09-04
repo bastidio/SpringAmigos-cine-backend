@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -37,7 +40,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
     @Override
     @Transactional // boton de emegencia
-    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException {
+    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException {
 
         // 1. buqueda x id
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
@@ -110,7 +113,14 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 entrada.setFuncion_id(funcion);
                 entrada.setAsiento_id(item.getAsiento());
                 entrada.setPrecio(funcion.getPrecio_base());
-                entradaRepository.save(entrada);
+                try {
+                    // saveAndFlush fuerza el INSERT ahora, para que la violacion del UNIQUE
+                    // salte aca (y no al cerrar la transaccion) y la podamos traducir a un error limpio.
+                    entradaRepository.saveAndFlush(entrada);
+                } catch (DataIntegrityViolationException e) {
+                    // La butaca ya fue vendida para esta funcion (choca contra el UNIQUE).
+                    throw new AsientoOcupadoException();
+                }
 
                 totalCalculado = totalCalculado.add(funcion.getPrecio_base());
 
