@@ -15,6 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
+import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+
 import java.net.URI;
 
 // El usuarioId ya no viaja en el path: sale del principal autenticado
@@ -40,12 +43,14 @@ public class CarritoController {
     public ResponseEntity<Carrito> agregarItem(
             @AuthenticationPrincipal Usuario usuario,
             @RequestBody ItemCarritoRequest request)
-            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException {
+            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
 
         Carrito carritoActualizado = carritoService.agregarItem(
                 usuario.getId(),
                 request.getProductoId(),
                 request.getAsientoId(),
+                request.getFuncionId(),
                 request.getCantidad()
         );
 

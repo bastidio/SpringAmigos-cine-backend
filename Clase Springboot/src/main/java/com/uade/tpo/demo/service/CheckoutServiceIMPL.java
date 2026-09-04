@@ -97,17 +97,26 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 itemOrdenRepository.save(itemOrden);
                 totalCalculado = totalCalculado.add(precioConDescuento.multiply(BigDecimal.valueOf(item.getCantidad())));
                 
-            } else if (item.getAsiento() != null && carrito.getFuncion() != null) {
+            } else if (item.getAsiento() != null) {
+                Funcion funcion = carrito.getFuncion();
+                if (funcion == null) {
+                    // Invariante: agregarItem garantiza que el carrito tenga funcion si hay butacas.
+                    // Si llegamos aca con funcion nula, algo esta corrupto: fallamos y el @Transactional revierte todo.
+                    throw new IllegalStateException("El carrito tiene butacas pero no tiene funcion asociada");
+                }
+
                 Entrada entrada = new Entrada();
-                entrada.setOrden_id(nuevaOrden); 
-                entrada.setFuncion_id(carrito.getFuncion()); 
-                entrada.setAsiento_id(item.getAsiento()); 
-                entrada.setPrecio(carrito.getFuncion().getPrecio_base());
-                
+                entrada.setOrden_id(nuevaOrden);
+                entrada.setFuncion_id(funcion);
+                entrada.setAsiento_id(item.getAsiento());
+                entrada.setPrecio(funcion.getPrecio_base());
                 entradaRepository.save(entrada);
-                
-                
-                totalCalculado = totalCalculado.add(carrito.getFuncion().getPrecio_base());
+
+                totalCalculado = totalCalculado.add(funcion.getPrecio_base());
+
+            } else {
+                // Ni producto ni asiento: item corrupto. No lo ignoramos en silencio.
+                throw new IllegalStateException("Item de carrito invalido: no tiene producto ni asiento");
             }
         }
 

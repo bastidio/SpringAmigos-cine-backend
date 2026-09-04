@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,6 +35,6 @@ public class Entrada {
     @JoinColumn(name = "asiento_id", referencedColumnName = "id")
     private Asiento asiento_id;
 
-    @Column
-    private Float precio;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal precio;
 }
