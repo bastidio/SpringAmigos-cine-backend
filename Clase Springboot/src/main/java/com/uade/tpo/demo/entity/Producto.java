@@ -1,7 +1,7 @@
 package com.uade.tpo.demo.entity;
 
+import java.math.BigDecimal;
 import java.util.List;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,14 +33,14 @@ public class Producto {
     @Column
     private String descripcion;
 
-    @Column
-    private Float precio;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal precio;
 
     @Column
     private Integer stock;
 
-    @Column
-    private Float descuento;
+    @Column(precision = 5, scale = 2)
+    private BigDecimal descuento;
 
     @Column(nullable = false, columnDefinition = "boolean default true")
     private Boolean activo = true;

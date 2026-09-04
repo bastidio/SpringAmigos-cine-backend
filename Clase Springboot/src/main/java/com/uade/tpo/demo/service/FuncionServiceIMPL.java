@@ -1,5 +1,5 @@
 package com.uade.tpo.demo.service;
-
+import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.entity.Pelicula;
 import com.uade.tpo.demo.entity.Sala;
@@ -36,7 +36,7 @@ public class FuncionServiceIMPL implements FuncionService {
     }
 
     @Override
-    public Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, Float precioBase) {
+    public Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, BigDecimal precioBase) {
         Pelicula pelicula = peliculaRepository.findById(peliculaId).orElseThrow();
         Sala sala = salaRepository.findById(salaId).orElseThrow();
 

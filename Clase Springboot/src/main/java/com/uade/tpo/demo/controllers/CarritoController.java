@@ -1,5 +1,5 @@
 package com.uade.tpo.demo.controllers;
-
+import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.CantidadRequest;
@@ -79,8 +79,8 @@ public class CarritoController {
     }
 
     @GetMapping("/total")
-    public ResponseEntity<Float> calcularTotal(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
-        Float total = carritoService.calcularTotal(usuario.getId());
+    public ResponseEntity<BigDecimal> calcularTotal(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
+        BigDecimal total = carritoService.calcularTotal(usuario.getId());
         return ResponseEntity.ok(total);
     }
 }

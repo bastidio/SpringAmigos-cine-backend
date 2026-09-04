@@ -1,5 +1,5 @@
 package com.uade.tpo.demo.service;
-
+import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Categoria;
 import com.uade.tpo.demo.entity.ImagenProducto;
 import com.uade.tpo.demo.entity.Producto;
@@ -30,7 +30,7 @@ public class ProductoServiceIMPL implements ProductoService {
     private ImagenProductoRepository imagenProductoRepository;
 
     @Override
-    public List<Producto> getProductos(String nombre, Long categoriaId, Float precioMin, Float precioMax) {
+    public List<Producto> getProductos(String nombre, Long categoriaId, BigDecimal precioMin, BigDecimal precioMax) {
         Specification<Producto> spec = Specification.where(ProductoSpecifications.estaActivo());
 
         if (nombre != null && !nombre.isBlank()) {

@@ -8,6 +8,9 @@ import com.uade.tpo.demo.util.PrecioUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -64,12 +67,12 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
         nuevaOrden.setFecha(java.time.LocalDateTime.now()); // Fecha actual
         nuevaOrden.setEstado("CONFIRMADA");
-        nuevaOrden.setTotal(0f);
+        nuevaOrden.setTotal(BigDecimal.ZERO);
 
 
         nuevaOrden = ordenRepository.save(nuevaOrden);
 
-        float totalCalculado = 0f;
+        BigDecimal totalCalculado = BigDecimal.ZERO;
 
         
         for (ItemCarrito item : items) {
@@ -88,12 +91,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 
                 itemOrdenRepository.save(itemOrden);
 
-                Float precioConDescuento = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
+                BigDecimal precioConDescuento = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
 
-
-                itemOrden.setPrecio_unitario(precioConDescuento);;
+                itemOrden.setPrecio_unitario(precioConDescuento);
                 itemOrdenRepository.save(itemOrden);
-                totalCalculado += (precioConDescuento * item.getCantidad());
+                totalCalculado = totalCalculado.add(precioConDescuento.multiply(BigDecimal.valueOf(item.getCantidad())));
                 
             } else if (item.getAsiento() != null && carrito.getFuncion() != null) {
                 Entrada entrada = new Entrada();
@@ -105,12 +107,12 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 entradaRepository.save(entrada);
                 
                 
-                totalCalculado += carrito.getFuncion().getPrecio_base();
+                totalCalculado = totalCalculado.add(carrito.getFuncion().getPrecio_base());
             }
         }
 
         // 5. Actualizacion total
-        nuevaOrden.setTotal(totalCalculado);
+        nuevaOrden.setTotal(totalCalculado.setScale(2, RoundingMode.HALF_UP));
         ordenRepository.save(nuevaOrden);
 
         // 6. se borra el los items del carrito

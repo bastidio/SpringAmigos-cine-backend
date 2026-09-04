@@ -1,5 +1,5 @@
 package com.uade.tpo.demo.entity.dto;
-
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -11,5 +11,5 @@ public class FuncionRequest {
     private LocalDateTime horario;
     private String idioma;
     private String formato;
-    private Float precio_base;
+    private BigDecimal precio_base;
 }

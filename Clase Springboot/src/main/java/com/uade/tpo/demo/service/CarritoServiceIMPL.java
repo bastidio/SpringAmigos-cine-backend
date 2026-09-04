@@ -21,10 +21,13 @@ import com.uade.tpo.demo.repository.ItemCarritoRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
 import com.uade.tpo.demo.repository.UsuarioRepository;
 import com.uade.tpo.demo.util.PrecioUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
-public class CarritoServiceIMP implements CarritoService {
+public class CarritoServiceIMPL implements CarritoService {
    @Autowired
     private CarritoRepository carritoRepository;
     @Autowired
@@ -141,40 +144,29 @@ public class CarritoServiceIMP implements CarritoService {
     }
 
     @Override
-    public Float calcularTotal(Long usuarioId) throws UsuarioNotFoundException {
-        
-        // construimos
+    public BigDecimal calcularTotal(Long usuarioId) throws UsuarioNotFoundException {
+
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
-        
-        // enlistas los items del carrito
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
-        
-        Float total = 0f;
-        
-        // for each para separar
+
+        BigDecimal total = BigDecimal.ZERO;
+
         for (ItemCarrito item : items) {
-            Float precioItem = 0f;
-            
-            //precio del producto
+            BigDecimal precioItem = BigDecimal.ZERO;
+
             if (item.getProducto() != null) {
                 precioItem = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
-            }
-
-            else if (item.getAsiento() != null) {
-                //
+            } else if (item.getAsiento() != null) {
                 if (carrito.getFuncion() != null) {
                     precioItem = carrito.getFuncion().getPrecio_base();
                 }
             }
-            
-            // Al usar Float en todo, multiplicamos directamente
-            Float subtotal = precioItem * item.getCantidad();
-            
-            
-            total = total + subtotal;
+
+            BigDecimal subtotal = precioItem.multiply(BigDecimal.valueOf(item.getCantidad()));
+            total = total.add(subtotal);
         }
-        
-        return total;
+
+        return total.setScale(2, RoundingMode.HALF_UP);
     }
     @Override
     @Transactional

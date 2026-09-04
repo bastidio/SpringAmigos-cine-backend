@@ -1,5 +1,5 @@
 package com.uade.tpo.demo.service;
-
+import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
 import com.uade.tpo.demo.exceptions.ItemCarritoNotFoundException;
@@ -19,7 +19,7 @@ public interface CarritoService {
 
     Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad) throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException;
 
-    Float calcularTotal(Long usuarioId) throws UsuarioNotFoundException;
+    BigDecimal calcularTotal(Long usuarioId) throws UsuarioNotFoundException;
 
 
     void vaciarCarrito(Long usuarioId) throws UsuarioNotFoundException;

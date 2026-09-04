@@ -1,5 +1,6 @@
 package com.uade.tpo.demo.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -29,8 +30,8 @@ public class Orden {
     @Column
     private LocalDateTime fecha;
 
-    @Column
-    private Float total;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal total;
 
     @Column
     private String estado;

@@ -1,6 +1,9 @@
 package com.uade.tpo.demo.repository;
 
 import com.uade.tpo.demo.entity.Producto;
+
+import java.math.BigDecimal;
+
 import org.springframework.data.jpa.domain.Specification;
 
 public class ProductoSpecifications {
@@ -16,11 +19,11 @@ public class ProductoSpecifications {
         return (root, query, cb) -> cb.equal(root.get("categoria").get("id"), categoriaId);
     }
 
-    public static Specification<Producto> precioMayorOIgualQue(Float precioMin) {
+    public static Specification<Producto> precioMayorOIgualQue(BigDecimal precioMin) {
         return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("precio"), precioMin);
     }
 
-    public static Specification<Producto> precioMenorOIgualQue(Float precioMax) {
+    public static Specification<Producto> precioMenorOIgualQue(BigDecimal precioMax) {
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("precio"), precioMax);
     }
 
