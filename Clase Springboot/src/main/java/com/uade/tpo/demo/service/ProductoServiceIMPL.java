@@ -31,7 +31,7 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public List<Producto> getProductos(String nombre, Long categoriaId, Float precioMin, Float precioMax) {
-        Specification<Producto> spec = Specification.where(null);
+        Specification<Producto> spec = Specification.where(ProductoSpecifications.estaActivo());
 
         if (nombre != null && !nombre.isBlank()) {
             spec = spec.and(ProductoSpecifications.nombreContiene(nombre));
@@ -51,7 +51,7 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public Optional<Producto> getProductoById(Long id) {
-        return productoRepository.findById(id);
+        return productoRepository.findById(id).filter(p -> Boolean.TRUE.equals(p.getActivo()));
     }
 
     @Override
@@ -105,7 +105,8 @@ public class ProductoServiceIMPL implements ProductoService {
     @Override
     public void deleteProducto(Long id) throws ProductoNotFoundException {
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
-        productoRepository.delete(producto);
+        producto.setActivo(false);
+        productoRepository.save(producto);
     }
 
     @Override

@@ -42,6 +42,9 @@ public class Producto {
     @Column
     private Float descuento;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean activo = true;
+
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImagenProducto> imagenes;
 }

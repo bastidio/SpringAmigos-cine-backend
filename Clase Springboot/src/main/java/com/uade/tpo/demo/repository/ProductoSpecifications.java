@@ -23,4 +23,9 @@ public class ProductoSpecifications {
     public static Specification<Producto> precioMenorOIgualQue(Float precioMax) {
         return (root, query, cb) -> cb.lessThanOrEqualTo(root.get("precio"), precioMax);
     }
+
+    public static Specification<Producto> estaActivo() {
+        return (root, query, cb) -> cb.isTrue(root.get("activo"));
+    }
+
 }
