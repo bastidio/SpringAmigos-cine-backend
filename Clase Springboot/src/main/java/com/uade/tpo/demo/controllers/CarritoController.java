@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.CantidadRequest;
 import com.uade.tpo.demo.entity.dto.ItemCarritoRequest;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
@@ -11,10 +12,14 @@ import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
 import com.uade.tpo.demo.service.CarritoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
+// El usuarioId ya no viaja en el path: sale del principal autenticado
+// (@AuthenticationPrincipal), asi se cierra el IDOR que dejaba operar el
+// carrito de cualquier usuario con solo cambiar el id de la URL.
 @RestController
 @RequestMapping("/api/carritos")
 public class CarritoController {
@@ -22,62 +27,60 @@ public class CarritoController {
     @Autowired
     private CarritoService carritoService;
 
-    @GetMapping("/{usuarioId}")
-    public ResponseEntity<Carrito> getCarritoPorUsuario(@PathVariable Long usuarioId) throws UsuarioNotFoundException {
-        Carrito carrito = carritoService.obtenerCarritoPorUsuario(usuarioId);
+    @GetMapping
+    public ResponseEntity<Carrito> getCarrito(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
+        Carrito carrito = carritoService.obtenerCarritoPorUsuario(usuario.getId());
         if (carrito != null) {
             return ResponseEntity.ok(carrito);
         }
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{usuarioId}/items")
+    @PostMapping("/items")
     public ResponseEntity<Carrito> agregarItem(
-            @PathVariable Long usuarioId,
+            @AuthenticationPrincipal Usuario usuario,
             @RequestBody ItemCarritoRequest request)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException {
 
         Carrito carritoActualizado = carritoService.agregarItem(
-                usuarioId,
-                request.getProductoId(), 
+                usuario.getId(),
+                request.getProductoId(),
                 request.getAsientoId(),
                 request.getCantidad()
         );
-        
-        // Retornamos 201 Created con la URI del carrito, mismo estilo que AsientoController
-        return ResponseEntity.created(URI.create("/api/carritos/" + usuarioId)).body(carritoActualizado);
+
+        return ResponseEntity.created(URI.create("/api/carritos")).body(carritoActualizado);
     }
 
-    @DeleteMapping("/{usuarioId}/items/{itemCarritoId}")
+    @DeleteMapping("/items/{itemCarritoId}")
     public ResponseEntity<Carrito> eliminarItem(
-            @PathVariable Long usuarioId,
+            @AuthenticationPrincipal Usuario usuario,
             @PathVariable Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException {
 
-        Carrito carritoActualizado = carritoService.eliminarItem(usuarioId, itemCarritoId);
+        Carrito carritoActualizado = carritoService.eliminarItem(usuario.getId(), itemCarritoId);
         return ResponseEntity.ok(carritoActualizado);
     }
 
-    @PutMapping("/{usuarioId}/items/{itemCarritoId}")
+    @PutMapping("/items/{itemCarritoId}")
     public ResponseEntity<Carrito> modificarCantidad(
-            @PathVariable Long usuarioId,
+            @AuthenticationPrincipal Usuario usuario,
             @PathVariable Long itemCarritoId,
             @RequestBody CantidadRequest request)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException {
 
-        Carrito carritoActualizado = carritoService.modificarCantidad(usuarioId, itemCarritoId, request.getCantidad());
+        Carrito carritoActualizado = carritoService.modificarCantidad(usuario.getId(), itemCarritoId, request.getCantidad());
         return ResponseEntity.ok(carritoActualizado);
     }
 
-    @DeleteMapping("/{usuarioId}")
-    public ResponseEntity<Void> vaciarCarrito(@PathVariable Long usuarioId) throws UsuarioNotFoundException {
-        carritoService.vaciarCarrito(usuarioId);
-        // Devolvemos 204 No Content indicando que la operación fue exitosa pero no hay body
-        return ResponseEntity.noContent().build(); 
+    @DeleteMapping
+    public ResponseEntity<Void> vaciarCarrito(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
+        carritoService.vaciarCarrito(usuario.getId());
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{usuarioId}/total")
-    public ResponseEntity<Float> calcularTotal(@PathVariable Long usuarioId) throws UsuarioNotFoundException {
-        Float total = carritoService.calcularTotal(usuarioId);
+    @GetMapping("/total")
+    public ResponseEntity<Float> calcularTotal(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
+        Float total = carritoService.calcularTotal(usuario.getId());
         return ResponseEntity.ok(total);
     }
 }

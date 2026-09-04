@@ -1,6 +1,9 @@
 package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Orden;
+import com.uade.tpo.demo.entity.Rol;
+import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.exceptions.OrdenAccesoDenegadoException;
 import com.uade.tpo.demo.repository.OrdenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,9 +17,11 @@ public class OrdenServiceIMPL implements OrdenService {
     private OrdenRepository ordenRepository;
 
     @Override
-    public Orden getOrdenById(Long id) {
-        return ordenRepository.findById(id)
+    public Orden getOrdenById(Long id, Usuario solicitante) throws OrdenAccesoDenegadoException {
+        Orden orden = ordenRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Orden no encontrada con ID: " + id));
+        validarPertenencia(orden, solicitante);
+        return orden;
     }
 
     @Override
@@ -30,9 +35,18 @@ public class OrdenServiceIMPL implements OrdenService {
     }
 
     @Override
-    public Orden cancelOrden(Long id) {
-        Orden orden = getOrdenById(id);
+    public Orden cancelOrden(Long id, Usuario solicitante) throws OrdenAccesoDenegadoException {
+        Orden orden = getOrdenById(id, solicitante);
         orden.setEstado("Cancelada");
         return ordenRepository.save(orden);
+    }
+
+    private void validarPertenencia(Orden orden, Usuario solicitante) throws OrdenAccesoDenegadoException {
+        boolean esAdmin = solicitante.getRol() == Rol.ADMIN;
+        boolean esDueño = orden.getUsuario() != null && orden.getUsuario().getId().equals(solicitante.getId());
+
+        if (!esAdmin && !esDueño) {
+            throw new OrdenAccesoDenegadoException();
+        }
     }
 }
