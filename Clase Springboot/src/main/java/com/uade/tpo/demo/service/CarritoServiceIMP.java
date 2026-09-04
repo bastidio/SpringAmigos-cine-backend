@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.uade.tpo.demo.entity.Asiento;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemCarrito;
@@ -53,6 +54,7 @@ public class CarritoServiceIMP implements CarritoService {
     }
 
     @Override
+    @Transactional
     public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Integer cantidad)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException {
 
@@ -104,6 +106,7 @@ public class CarritoServiceIMP implements CarritoService {
     }
 
     @Override
+    @Transactional
     public Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
@@ -116,6 +119,7 @@ public class CarritoServiceIMP implements CarritoService {
     }
 
     @Override
+    @Transactional
     public Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
@@ -173,6 +177,7 @@ public class CarritoServiceIMP implements CarritoService {
         return total;
     }
     @Override
+    @Transactional
     public void vaciarCarrito(Long usuarioId) throws UsuarioNotFoundException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
         itemCarritoRepository.deleteAllByCarrito(carrito);
