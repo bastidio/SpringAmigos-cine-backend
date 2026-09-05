@@ -8,6 +8,7 @@ import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
 
 public interface CarritoService {
     Carrito obtenerCarritoPorUsuario(Long usuarioId) throws UsuarioNotFoundException;
@@ -15,7 +16,8 @@ public interface CarritoService {
 
     Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
-                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException;
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
+                   ItemCarritoInvalidoException;
 
     Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException;
 

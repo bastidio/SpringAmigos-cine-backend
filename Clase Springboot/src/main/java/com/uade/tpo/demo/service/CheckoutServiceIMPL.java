@@ -141,6 +141,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
         // 6. se borra el los items del carrito
         itemCarritoRepository.deleteAll(items);
 
+        // El carrito vuelve a quedar libre: sin items y sin funcion asociada,
+        // para que el usuario pueda comprar butacas de otra funcion despues.
+        carrito.setFuncion(null);
+        carritoRepository.save(carrito);
+
         return nuevaOrden;
     }
 }

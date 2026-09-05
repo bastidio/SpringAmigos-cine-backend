@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
 
 import java.net.URI;
 
@@ -44,7 +45,8 @@ public class CarritoController {
             @AuthenticationPrincipal Usuario usuario,
             @RequestBody ItemCarritoRequest request)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
-                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
+                   ItemCarritoInvalidoException {
 
         Carrito carritoActualizado = carritoService.agregarItem(
                 usuario.getId(),

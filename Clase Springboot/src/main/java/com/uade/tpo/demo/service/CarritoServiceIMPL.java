@@ -25,6 +25,7 @@ import com.uade.tpo.demo.util.PrecioUtils;
 import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.repository.FuncionRepository;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
+import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
 
 import java.math.BigDecimal;
@@ -67,7 +68,8 @@ public class CarritoServiceIMPL implements CarritoService {
     @Transactional
     public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
         throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
-                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
+                   ItemCarritoInvalidoException {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
@@ -144,6 +146,13 @@ public class CarritoServiceIMPL implements CarritoService {
             itemCarritoRepository.save(nuevoItem);
         }
 
+        else {
+            // Ni producto ni butaca: la request no pide nada concreto. No se
+            // devuelve 201 en silencio (regla de oro: toda request tiene una
+            // response que refleja lo que realmente paso).
+            throw new ItemCarritoInvalidoException();
+        }
+
         return carrito;
     }
 
@@ -213,10 +222,17 @@ public class CarritoServiceIMPL implements CarritoService {
 
         return total.setScale(2, RoundingMode.HALF_UP);
     }
+
     @Override
     @Transactional
     public void vaciarCarrito(Long usuarioId) throws UsuarioNotFoundException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
         itemCarritoRepository.deleteAllByCarrito(carrito);
+
+        // Al vaciar el carrito se libera la funcion asociada. Sin esto el carrito
+        // queda pegado a la primera funcion para siempre y agregarItem rechaza
+        // cualquier butaca de otra funcion.
+        carrito.setFuncion(null);
+        carritoRepository.save(carrito);
     }
 }
