@@ -133,9 +133,12 @@ public class CarritoServiceIMPL implements CarritoService {
             carrito.setFuncion(funcion);
             carritoRepository.save(carrito);
 
+            // Una butaca es unitaria: se ignora la cantidad recibida y se fuerza a 1.
+            // Si no, calcularTotal (precio_base x cantidad) queda desincronizado del
+            // checkout, que cobra precio_base una sola vez y crea una unica Entrada.
             ItemCarrito nuevoItem = new ItemCarrito();
             nuevoItem.setCarrito(carrito);
-            nuevoItem.setCantidad(cantidad);
+            nuevoItem.setCantidad(1);
             nuevoItem.setAsiento(asiento);
 
             itemCarritoRepository.save(nuevoItem);
@@ -160,11 +163,17 @@ public class CarritoServiceIMPL implements CarritoService {
     @Override
     @Transactional
     public Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
-            throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException {
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
+                   SeleccionButacaInvalidaException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
         ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
                 .orElseThrow(ItemCarritoNotFoundException::new);
+
+        // Una butaca es unitaria: no tiene cantidad modificable (ver agregarItem).
+        if (item.getAsiento() != null) {
+            throw new SeleccionButacaInvalidaException();
+        }
 
         if (item.getProducto() != null) {
             Producto producto = item.getProducto();

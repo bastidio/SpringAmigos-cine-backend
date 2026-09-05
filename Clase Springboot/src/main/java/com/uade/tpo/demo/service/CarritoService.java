@@ -19,7 +19,9 @@ public interface CarritoService {
 
     Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException;
 
-    Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad) throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException;
+    Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
+                   SeleccionButacaInvalidaException;
 
     BigDecimal calcularTotal(Long usuarioId) throws UsuarioNotFoundException;
 

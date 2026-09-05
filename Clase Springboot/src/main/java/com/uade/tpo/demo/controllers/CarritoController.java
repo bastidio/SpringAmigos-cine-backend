@@ -71,7 +71,8 @@ public class CarritoController {
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable Long itemCarritoId,
             @RequestBody CantidadRequest request)
-            throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException {
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
+                   SeleccionButacaInvalidaException {
 
         Carrito carritoActualizado = carritoService.modificarCantidad(usuario.getId(), itemCarritoId, request.getCantidad());
         return ResponseEntity.ok(carritoActualizado);
