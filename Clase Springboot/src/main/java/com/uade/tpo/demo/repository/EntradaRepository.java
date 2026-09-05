@@ -26,4 +26,11 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
     // el usuario (evita exponer datos del comprador en el endpoint publico).
     @Query("SELECT e.asiento_id.id FROM Entrada e WHERE e.funcion_id.id = :funcionId")
     List<Long> findAsientoIdsByFuncionId(@Param("funcionId") Long funcionId);
+
+    // Entradas emitidas por una orden. Se usa al cancelar: hay que borrarlas para
+    // liberar la butaca (el UNIQUE (funcion_id, asiento_id) la mantiene bloqueada
+    // mientras exista la fila). Mismo motivo que arriba para usar @Query: el campo
+    // se llama orden_id y el "_" es reservado en las queries derivadas.
+    @Query("SELECT e FROM Entrada e WHERE e.orden_id.id = :ordenId")
+    List<Entrada> findByOrdenId(@Param("ordenId") Long ordenId);
 }

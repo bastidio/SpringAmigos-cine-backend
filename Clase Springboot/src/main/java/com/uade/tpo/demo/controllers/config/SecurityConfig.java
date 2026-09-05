@@ -50,6 +50,19 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(req -> req
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
 
+                                                // Cuando un controller lanza una excepcion con @ResponseStatus,
+                                                // Spring hace response.sendError(...) y el servlet re-despacha a
+                                                // /error. Ese re-despacho vuelve a pasar por la cadena de seguridad
+                                                // pero SIN el JwtAuthenticationFilter (OncePerRequestFilter no corre
+                                                // en ERROR dispatch), asi que sin este permitAll un 404/403 legitimo
+                                                // termina respondiendo 401.
+                                                .requestMatchers("/error").permitAll()
+
+                                                // El listado de productos dados de baja es solo para el staff.
+                                                // Va ANTES del GET publico de CATALOGO: si no, /productos/**
+                                                // lo agarraria primero y lo dejaria abierto.
+                                                .requestMatchers(HttpMethod.GET, "/productos/inactivos").hasAuthority("ADMIN")
+
                                                 .requestMatchers(HttpMethod.GET, CATALOGO).permitAll()
                                                 .requestMatchers(HttpMethod.POST, CATALOGO).hasAuthority("ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, CATALOGO).hasAuthority("ADMIN")
@@ -62,6 +75,13 @@ public class SecurityConfig {
                                                 // resuelve en OrdenServiceIMPL, no en este matcher (bloque E).
                                                 .requestMatchers(HttpMethod.GET, "/ordenes").hasAuthority("ADMIN")
                                                 .requestMatchers("/ordenes/**").authenticated()
+
+                                                // Ocupacion de una funcion: publica, igual que el catalogo, y
+                                                // solo expone ids de asiento (OcupacionFuncionResponse). El resto
+                                                // de /entradas/** (mis-entradas, por usuario, por id) es privado
+                                                // y ademas valida pertenencia en EntradaServiceIMPL.
+                                                .requestMatchers(HttpMethod.GET, "/entradas/funcion/**").permitAll()
+                                                .requestMatchers("/entradas/**").authenticated()
 
                                                 .requestMatchers("/api/carritos/**", "/api/checkout/**")
                                                 .authenticated()

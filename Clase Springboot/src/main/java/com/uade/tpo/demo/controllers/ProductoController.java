@@ -7,6 +7,7 @@ import com.uade.tpo.demo.entity.dto.StockRequest;
 import com.uade.tpo.demo.exceptions.ImagenProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.service.ProductoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,13 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.getProductos(nombre, categoriaId, precioMin, precioMax));
     }
 
+    // Solo ADMIN (ver SecurityConfig). Declarado antes de /{id} por claridad;
+    // Spring MVC ya prioriza la ruta literal sobre la variable igual.
+    @GetMapping("/inactivos")
+    public ResponseEntity<List<Producto>> getProductosInactivos() {
+        return ResponseEntity.ok(productoService.getProductosInactivos());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Producto> getProductoById(@PathVariable Long id) {
         Optional<Producto> result = productoService.getProductoById(id);
@@ -41,7 +49,7 @@ public class ProductoController {
     }
 
     @PostMapping
-    public ResponseEntity<Producto> createProducto(@RequestBody ProductoRequest request) {
+    public ResponseEntity<Producto> createProducto(@Valid @RequestBody ProductoRequest request) {
         Producto nuevoProducto = productoService.createProducto(
                 request.getCategoriaId(),
                 request.getNombre(),
@@ -55,7 +63,7 @@ public class ProductoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Producto> updateProducto(@PathVariable Long id, @RequestBody ProductoRequest request)
+    public ResponseEntity<Producto> updateProducto(@PathVariable Long id, @Valid @RequestBody ProductoRequest request)
             throws ProductoNotFoundException {
         Producto productoActualizado = productoService.updateProducto(
                 id,
@@ -70,7 +78,7 @@ public class ProductoController {
     }
 
     @PatchMapping("/{id}/stock")
-    public ResponseEntity<Producto> actualizarStock(@PathVariable Long id, @RequestBody StockRequest request) throws ProductoNotFoundException {
+    public ResponseEntity<Producto> actualizarStock(@PathVariable Long id, @Valid @RequestBody StockRequest request) throws ProductoNotFoundException {
         Producto productoActualizado = productoService.actualizarStock(id, request.getStock());
         return ResponseEntity.ok(productoActualizado);
     }
@@ -81,8 +89,15 @@ public class ProductoController {
         return ResponseEntity.noContent().build();
     }
 
+    // Deshace la baja logica de deleteProducto. Solo ADMIN (PATCH sobre CATALOGO
+    // en SecurityConfig).
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<Producto> reactivarProducto(@PathVariable Long id) throws ProductoNotFoundException {
+        return ResponseEntity.ok(productoService.reactivarProducto(id));
+    }
+
     @PostMapping("/{id}/imagenes")
-    public ResponseEntity<Producto> agregarImagen(@PathVariable Long id, @RequestBody ImagenProductoRequest request) throws ProductoNotFoundException {
+    public ResponseEntity<Producto> agregarImagen(@PathVariable Long id, @Valid @RequestBody ImagenProductoRequest request) throws ProductoNotFoundException {
         Producto productoActualizado = productoService.agregarImagen(id, request.getUrl());
         return ResponseEntity.created(URI.create("/productos/" + id)).body(productoActualizado);
     }

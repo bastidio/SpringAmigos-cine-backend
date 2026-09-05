@@ -55,6 +55,19 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
+    public List<Producto> getProductosInactivos() {
+        return productoRepository.findAll(ProductoSpecifications.noEstaActivo());
+    }
+
+    @Override
+    public Producto reactivarProducto(Long id) throws ProductoNotFoundException {
+        // findById sin filtro de activo: justamente queremos alcanzar los inactivos.
+        Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
+        producto.setActivo(true);
+        return productoRepository.save(producto);
+    }
+
+    @Override
     public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes) {
         Categoria categoria = categoriaRepository.findById(categoriaId).orElseThrow();
 
