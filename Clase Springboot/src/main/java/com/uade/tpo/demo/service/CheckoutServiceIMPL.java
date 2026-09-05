@@ -39,7 +39,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
     private ProductoRepository productoRepository;
 
     @Override
-    @Transactional // boton de emegencia
+    // rollbackFor = Exception.class: AsientoOcupadoException es checked y puede
+    // lanzarse despues de haber creado la orden, descontado stock y guardado
+    // otras entradas dentro del mismo loop. Sin esto, @Transactional solo
+    // revierte ante RuntimeException y esa excepcion dejaba una orden a medias.
+    @Transactional(rollbackFor = Exception.class)
     public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException {
 
         // 1. buqueda x id
