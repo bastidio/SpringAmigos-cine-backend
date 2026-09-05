@@ -13,10 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.uade.tpo.demo.entity.dto.ErrorResponse;
 
-// Traduce excepciones no anotadas a respuestas JSON consistentes (ErrorResponse).
-// Las excepciones de dominio que ya llevan @ResponseStatus (ProductoNotFoundException,
-// OrdenNotFoundException, etc.) las sigue resolviendo Spring por su cuenta: aca no
-// hay un handler de Exception.class que las intercepte y las degrade a 500.
+
+// Maneja errores de validacion y de negocio de manera centralizada, devolviendo un JSON consistente para el frontend.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -44,10 +42,7 @@ public class GlobalExceptionHandler {
                 "El cuerpo del request no es un JSON valido");
         return ResponseEntity.badRequest().body(body);
     }
-
-    // Orden inexistente. Se maneja aca (y no solo con el @ResponseStatus de la
-    // excepcion) para responder el mismo ErrorResponse que el resto y evitar el
-    // re-despacho a /error con el cuerpo por defecto de Spring Boot.
+    // La orden solicitada no existe.
     @ExceptionHandler(OrdenNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleOrdenNotFound(OrdenNotFoundException ex) {
         ErrorResponse body = new ErrorResponse(

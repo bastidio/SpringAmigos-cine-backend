@@ -5,9 +5,7 @@ import java.util.Map;
 
 import lombok.Data;
 
-// DTO unico de error para todas las respuestas de fallo que pasan por
-// GlobalExceptionHandler. Formato estable para que el front no dependa
-// del cuerpo de error por defecto de Spring Boot.
+//dto para devolver errores de validacion y de negocio en un formato consistente para frontend.
 @Data
 public class ErrorResponse {
     private final LocalDateTime timestamp = LocalDateTime.now();
