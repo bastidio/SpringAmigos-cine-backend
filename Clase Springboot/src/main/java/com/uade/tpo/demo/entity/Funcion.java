@@ -1,5 +1,6 @@
 package com.uade.tpo.demo.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -39,6 +40,6 @@ public class Funcion {
     @Column
     private String formato;
 
-    @Column
-    private Float precio_base;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal precio_base;
 }

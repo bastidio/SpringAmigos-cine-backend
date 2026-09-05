@@ -1,5 +1,5 @@
 package com.uade.tpo.demo.controllers;
-
+import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.CantidadRequest;
@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
+import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
 
 import java.net.URI;
 
@@ -40,12 +43,14 @@ public class CarritoController {
     public ResponseEntity<Carrito> agregarItem(
             @AuthenticationPrincipal Usuario usuario,
             @RequestBody ItemCarritoRequest request)
-            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException {
+            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
 
         Carrito carritoActualizado = carritoService.agregarItem(
                 usuario.getId(),
                 request.getProductoId(),
                 request.getAsientoId(),
+                request.getFuncionId(),
                 request.getCantidad()
         );
 
@@ -79,8 +84,8 @@ public class CarritoController {
     }
 
     @GetMapping("/total")
-    public ResponseEntity<Float> calcularTotal(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
-        Float total = carritoService.calcularTotal(usuario.getId());
+    public ResponseEntity<BigDecimal> calcularTotal(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
+        BigDecimal total = carritoService.calcularTotal(usuario.getId());
         return ResponseEntity.ok(total);
     }
 }

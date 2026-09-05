@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,6 +33,6 @@ public class ItemOrden {
     @Column
     private Integer cantidad;
 
-    @Column
-    private Float precio_unitario;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal precio_unitario;
 }

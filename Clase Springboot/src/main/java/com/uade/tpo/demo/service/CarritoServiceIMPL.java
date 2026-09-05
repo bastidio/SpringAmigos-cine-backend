@@ -21,10 +21,18 @@ import com.uade.tpo.demo.repository.ItemCarritoRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
 import com.uade.tpo.demo.repository.UsuarioRepository;
 import com.uade.tpo.demo.util.PrecioUtils;
+
+import com.uade.tpo.demo.entity.Funcion;
+import com.uade.tpo.demo.repository.FuncionRepository;
+import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
+import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
-public class CarritoServiceIMP implements CarritoService {
+public class CarritoServiceIMPL implements CarritoService {
    @Autowired
     private CarritoRepository carritoRepository;
     @Autowired
@@ -35,6 +43,8 @@ public class CarritoServiceIMP implements CarritoService {
     private ProductoRepository productoRepository;
     @Autowired
     private AsientoRepository asientoRepository;
+    @Autowired
+    private FuncionRepository funcionRepository;
 
     @Override
     public Carrito obtenerCarritoPorUsuario(Long usuarioId) throws UsuarioNotFoundException {
@@ -55,8 +65,9 @@ public class CarritoServiceIMP implements CarritoService {
 
     @Override
     @Transactional
-    public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Integer cantidad)
-            throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException, StockInsuficienteException {
+    public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
+        throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
@@ -64,6 +75,10 @@ public class CarritoServiceIMP implements CarritoService {
             Producto producto = productoRepository.findById(productoId)
                     .orElseThrow(ProductoNotFoundException::new);
 
+            if (!Boolean.TRUE.equals(producto.getActivo())) {
+                throw new ProductoNotFoundException();
+            }
+            
             Optional<ItemCarrito> itemExistente = itemCarritoRepository.findByCarritoAndProducto(carrito, producto);
 
             if (itemExistente.isPresent()) {
@@ -91,8 +106,32 @@ public class CarritoServiceIMP implements CarritoService {
         }
 
         else if (asientoId != null) {
+            if (funcionId == null) {
+                throw new SeleccionButacaInvalidaException();
+            }
+
             Asiento asiento = asientoRepository.findById(asientoId)
                     .orElseThrow(AsientoNotFoundException::new);
+
+            Funcion funcion = funcionRepository.findById(funcionId)
+                    .orElseThrow(FuncionNotFoundException::new);
+
+            // La butaca tiene que pertenecer a la sala donde se da la funcion.
+            if (asiento.getSala() == null || funcion.getSala() == null
+                    || !asiento.getSala().getId().equals(funcion.getSala().getId())) {
+                throw new SeleccionButacaInvalidaException();
+            }
+
+            // El modelo soporta una sola funcion por carrito: si ya hay butacas de otra, se rechaza.
+            if (carrito.getFuncion() != null
+                    && !carrito.getFuncion().getId().equals(funcion.getId())) {
+                throw new SeleccionButacaInvalidaException();
+            }
+
+            // ESTO es lo que faltaba: asociar la funcion al carrito.
+            // Sin esta linea, el checkout nunca creaba la Entrada (el "agujero negro").
+            carrito.setFuncion(funcion);
+            carritoRepository.save(carrito);
 
             ItemCarrito nuevoItem = new ItemCarrito();
             nuevoItem.setCarrito(carrito);
@@ -141,40 +180,29 @@ public class CarritoServiceIMP implements CarritoService {
     }
 
     @Override
-    public Float calcularTotal(Long usuarioId) throws UsuarioNotFoundException {
-        
-        // construimos
+    public BigDecimal calcularTotal(Long usuarioId) throws UsuarioNotFoundException {
+
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
-        
-        // enlistas los items del carrito
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
-        
-        Float total = 0f;
-        
-        // for each para separar
+
+        BigDecimal total = BigDecimal.ZERO;
+
         for (ItemCarrito item : items) {
-            Float precioItem = 0f;
-            
-            //precio del producto
+            BigDecimal precioItem = BigDecimal.ZERO;
+
             if (item.getProducto() != null) {
                 precioItem = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
-            }
-
-            else if (item.getAsiento() != null) {
-                //
+            } else if (item.getAsiento() != null) {
                 if (carrito.getFuncion() != null) {
                     precioItem = carrito.getFuncion().getPrecio_base();
                 }
             }
-            
-            // Al usar Float en todo, multiplicamos directamente
-            Float subtotal = precioItem * item.getCantidad();
-            
-            
-            total = total + subtotal;
+
+            BigDecimal subtotal = precioItem.multiply(BigDecimal.valueOf(item.getCantidad()));
+            total = total.add(subtotal);
         }
-        
-        return total;
+
+        return total.setScale(2, RoundingMode.HALF_UP);
     }
     @Override
     @Transactional

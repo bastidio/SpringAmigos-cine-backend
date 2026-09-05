@@ -1,5 +1,7 @@
 package com.uade.tpo.demo.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,11 +10,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "entrada")
+@Table(name = "entrada", uniqueConstraints = @UniqueConstraint(columnNames = {"funcion_id", "asiento_id"}))
 public class Entrada {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +36,6 @@ public class Entrada {
     @JoinColumn(name = "asiento_id", referencedColumnName = "id")
     private Asiento asiento_id;
 
-    @Column
-    private Float precio;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal precio;
 }

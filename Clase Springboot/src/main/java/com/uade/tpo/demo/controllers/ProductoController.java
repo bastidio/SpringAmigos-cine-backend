@@ -1,5 +1,5 @@
 package com.uade.tpo.demo.controllers;
-
+import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.dto.ImagenProductoRequest;
 import com.uade.tpo.demo.entity.dto.ProductoRequest;
@@ -26,8 +26,8 @@ public class ProductoController {
     public ResponseEntity<List<Producto>> getProductos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Long categoriaId,
-            @RequestParam(required = false) Float precioMin,
-            @RequestParam(required = false) Float precioMax) {
+            @RequestParam(required = false) BigDecimal precioMin,
+            @RequestParam(required = false) BigDecimal precioMax) {
         return ResponseEntity.ok(productoService.getProductos(nombre, categoriaId, precioMin, precioMax));
     }
 

@@ -8,6 +8,12 @@ import com.uade.tpo.demo.util.PrecioUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -34,7 +40,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
     @Override
     @Transactional // boton de emegencia
-    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException {
+    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException {
 
         // 1. buqueda x id
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
@@ -64,12 +70,12 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
         nuevaOrden.setFecha(java.time.LocalDateTime.now()); // Fecha actual
         nuevaOrden.setEstado("CONFIRMADA");
-        nuevaOrden.setTotal(0f);
+        nuevaOrden.setTotal(BigDecimal.ZERO);
 
 
         nuevaOrden = ordenRepository.save(nuevaOrden);
 
-        float totalCalculado = 0f;
+        BigDecimal totalCalculado = BigDecimal.ZERO;
 
         
         for (ItemCarrito item : items) {
@@ -88,29 +94,44 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 
                 itemOrdenRepository.save(itemOrden);
 
-                Float precioConDescuento = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
+                BigDecimal precioConDescuento = PrecioUtils.precioConDescuento(item.getProducto().getPrecio(), item.getProducto().getDescuento());
 
-
-                itemOrden.setPrecio_unitario(precioConDescuento);;
+                itemOrden.setPrecio_unitario(precioConDescuento);
                 itemOrdenRepository.save(itemOrden);
-                totalCalculado += (precioConDescuento * item.getCantidad());
+                totalCalculado = totalCalculado.add(precioConDescuento.multiply(BigDecimal.valueOf(item.getCantidad())));
                 
-            } else if (item.getAsiento() != null && carrito.getFuncion() != null) {
+            } else if (item.getAsiento() != null) {
+                Funcion funcion = carrito.getFuncion();
+                if (funcion == null) {
+                    // Invariante: agregarItem garantiza que el carrito tenga funcion si hay butacas.
+                    // Si llegamos aca con funcion nula, algo esta corrupto: fallamos y el @Transactional revierte todo.
+                    throw new IllegalStateException("El carrito tiene butacas pero no tiene funcion asociada");
+                }
+
                 Entrada entrada = new Entrada();
-                entrada.setOrden_id(nuevaOrden); 
-                entrada.setFuncion_id(carrito.getFuncion()); 
-                entrada.setAsiento_id(item.getAsiento()); 
-                entrada.setPrecio(carrito.getFuncion().getPrecio_base());
-                
-                entradaRepository.save(entrada);
-                
-                
-                totalCalculado += carrito.getFuncion().getPrecio_base();
+                entrada.setOrden_id(nuevaOrden);
+                entrada.setFuncion_id(funcion);
+                entrada.setAsiento_id(item.getAsiento());
+                entrada.setPrecio(funcion.getPrecio_base());
+                try {
+                    // saveAndFlush fuerza el INSERT ahora, para que la violacion del UNIQUE
+                    // salte aca (y no al cerrar la transaccion) y la podamos traducir a un error limpio.
+                    entradaRepository.saveAndFlush(entrada);
+                } catch (DataIntegrityViolationException e) {
+                    // La butaca ya fue vendida para esta funcion (choca contra el UNIQUE).
+                    throw new AsientoOcupadoException();
+                }
+
+                totalCalculado = totalCalculado.add(funcion.getPrecio_base());
+
+            } else {
+                // Ni producto ni asiento: item corrupto. No lo ignoramos en silencio.
+                throw new IllegalStateException("Item de carrito invalido: no tiene producto ni asiento");
             }
         }
 
         // 5. Actualizacion total
-        nuevaOrden.setTotal(totalCalculado);
+        nuevaOrden.setTotal(totalCalculado.setScale(2, RoundingMode.HALF_UP));
         ordenRepository.save(nuevaOrden);
 
         // 6. se borra el los items del carrito
