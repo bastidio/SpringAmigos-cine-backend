@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 @Entity
@@ -35,4 +36,15 @@ public class ItemCarrito {
 
     @Column
     private Integer cantidad;
+
+    // Momento en que se reservó la butaca; null para ítems de producto.
+    @Column
+    private LocalDateTime reservadoEn;
+
+    public static final int MINUTOS_RESERVA = 15;
+
+    public boolean reservaVencida() {
+        return this.reservadoEn != null &&
+               this.reservadoEn.plusMinutes(MINUTOS_RESERVA).isBefore(LocalDateTime.now());
+    }
 }
