@@ -50,6 +50,13 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(req -> req
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
 
+                                                // /error es el dispatch interno de Tomcat al que Spring redirige
+                                                // cuando una excepcion con @ResponseStatus(reason=...) llama a
+                                                // sendError(). Ese dispatch no lleva el header Authorization, asi
+                                                // que sin este permitAll cae en anyRequest().authenticated() y
+                                                // todos los errores de negocio salen como 401 en vez de su codigo.
+                                                .requestMatchers("/error").permitAll()
+
                                                 .requestMatchers(HttpMethod.GET, CATALOGO).permitAll()
                                                 .requestMatchers(HttpMethod.POST, CATALOGO).hasAuthority("ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, CATALOGO).hasAuthority("ADMIN")
