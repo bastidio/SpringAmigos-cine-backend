@@ -55,7 +55,7 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
-    public Producto createProducto(Long categoriaId, String nombre, String descripcion, Float precio, Integer stock, Float descuento, List<String> imagenes) {
+    public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes) {
         Categoria categoria = categoriaRepository.findById(categoriaId).orElseThrow();
 
         Producto nuevoProducto = new Producto();
@@ -81,7 +81,7 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
-    public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, Float precio, Integer stock, Float descuento) throws ProductoNotFoundException {
+    public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento) throws ProductoNotFoundException {
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
         Categoria categoria = categoriaRepository.findById(categoriaId).orElseThrow();
 
