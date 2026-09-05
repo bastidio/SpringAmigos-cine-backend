@@ -129,6 +129,13 @@ public class CarritoServiceIMPL implements CarritoService {
                     && !carrito.getFuncion().getId().equals(funcion.getId())) {
                 throw new SeleccionButacaInvalidaException();
             }
+            
+            // Una butaca no se puede agregar dos veces al mismo carrito: al confirmar
+            // chocaria contra el UNIQUE(funcion_id, asiento_id) y dejaria la compra
+            // bloqueada hasta vaciar el carrito.
+            if (itemCarritoRepository.findByCarritoAndAsiento(carrito, asiento).isPresent()) {
+                throw new SeleccionButacaInvalidaException();
+            }
 
             // ESTO es lo que faltaba: asociar la funcion al carrito.
             // Sin esta linea, el checkout nunca creaba la Entrada (el "agujero negro").

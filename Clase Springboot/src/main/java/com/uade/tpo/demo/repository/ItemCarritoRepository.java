@@ -3,6 +3,7 @@ package com.uade.tpo.demo.repository;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Producto;
+import com.uade.tpo.demo.entity.Asiento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,4 +22,7 @@ public interface ItemCarritoRepository extends JpaRepository<ItemCarrito, Long> 
 
     // Para consolidar cantidades cuando se agrega un producto que ya está en el carrito
     Optional<ItemCarrito> findByCarritoAndProducto(Carrito carrito, Producto producto);
+
+    // Para detectar que una butaca ya esta en el carrito y no duplicarla
+    Optional<ItemCarrito> findByCarritoAndAsiento(Carrito carrito, Asiento asiento);
 }
