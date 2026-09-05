@@ -1,13 +1,8 @@
 package com.uade.tpo.demo.exceptions;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -18,18 +13,14 @@ import com.uade.tpo.demo.entity.dto.ErrorResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Falla de @Valid: junta cada campo invalido con su motivo.
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
-        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
-            errores.put(fe.getField(), fe.getDefaultMessage());
-        }
+    // Validacion manual de los request (ver ProductoServiceIMPL): campo -> motivo.
+    @ExceptionHandler(ValidacionException.class)
+    public ResponseEntity<ErrorResponse> handleValidacion(ValidacionException ex) {
         ErrorResponse body = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Datos invalidos",
                 "El cuerpo del request no paso las validaciones",
-                errores);
+                ex.getErrores());
         return ResponseEntity.badRequest().body(body);
     }
 

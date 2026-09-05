@@ -5,6 +5,7 @@ import com.uade.tpo.demo.entity.ImagenProducto;
 import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.exceptions.ImagenProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.ValidacionException;
 import com.uade.tpo.demo.repository.CategoriaRepository;
 import com.uade.tpo.demo.repository.ImagenProductoRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
@@ -14,7 +15,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -69,6 +72,7 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes) {
+        validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
         Categoria categoria = categoriaRepository.findById(categoriaId).orElseThrow();
 
         Producto nuevoProducto = new Producto();
@@ -95,6 +99,7 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento) throws ProductoNotFoundException {
+        validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
         Categoria categoria = categoriaRepository.findById(categoriaId).orElseThrow();
 
@@ -110,6 +115,12 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public Producto actualizarStock(Long id, Integer nuevoStock) throws ProductoNotFoundException {
+        if (nuevoStock == null) {
+            throw new ValidacionException(Map.of("stock", "el stock es obligatorio"));
+        }
+        if (nuevoStock < 0) {
+            throw new ValidacionException(Map.of("stock", "el stock no puede ser negativo"));
+        }
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
         producto.setStock(nuevoStock);
         return productoRepository.save(producto);
@@ -124,6 +135,9 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public Producto agregarImagen(Long productoId, String url) throws ProductoNotFoundException {
+        if (url == null || url.isBlank()) {
+            throw new ValidacionException(Map.of("url", "la url de la imagen es obligatoria"));
+        }
         Producto producto = productoRepository.findById(productoId).orElseThrow(ProductoNotFoundException::new);
 
         ImagenProducto nuevaImagen = new ImagenProducto();
@@ -142,5 +156,37 @@ public class ProductoServiceIMPL implements ProductoService {
                 .orElseThrow(ImagenProductoNotFoundException::new);
 
         imagenProductoRepository.delete(imagen);
+    }
+
+    // Validacion manual del alta/edicion de un producto. Junta todos los errores
+    // en un mapa campo -> motivo y, si hay alguno, corta con ValidacionException
+    // (GlobalExceptionHandler la traduce a 400).
+    private void validarDatosProducto(Long categoriaId, String nombre, BigDecimal precio, Integer stock, BigDecimal descuento) {
+        Map<String, String> errores = new LinkedHashMap<>();
+
+        if (categoriaId == null) {
+            errores.put("categoriaId", "la categoria es obligatoria");
+        }
+        if (nombre == null || nombre.isBlank()) {
+            errores.put("nombre", "el nombre es obligatorio");
+        }
+        if (precio == null) {
+            errores.put("precio", "el precio es obligatorio");
+        } else if (precio.signum() <= 0) {
+            errores.put("precio", "el precio debe ser mayor a 0");
+        }
+        if (stock == null) {
+            errores.put("stock", "el stock es obligatorio");
+        } else if (stock < 0) {
+            errores.put("stock", "el stock no puede ser negativo");
+        }
+        if (descuento != null
+                && (descuento.signum() < 0 || descuento.compareTo(BigDecimal.valueOf(100)) > 0)) {
+            errores.put("descuento", "el descuento debe estar entre 0 y 100");
+        }
+
+        if (!errores.isEmpty()) {
+            throw new ValidacionException(errores);
+        }
     }
 }
