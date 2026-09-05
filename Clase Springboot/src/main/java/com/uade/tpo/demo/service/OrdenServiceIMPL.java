@@ -13,6 +13,7 @@ import com.uade.tpo.demo.repository.ItemOrdenRepository;
 import com.uade.tpo.demo.repository.OrdenRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,7 +76,11 @@ public class OrdenServiceIMPL implements OrdenService {
         }
 
         // 1. Liberar butacas: borrar las entradas emitidas por esta orden.
-        List<Entrada> entradas = entradaRepository.findByOrdenId(id);
+        // Query by Example: un "molde" de Entrada con solo la orden seteada; QBE
+        // ignora los campos null y matchea por la asociacion orden_id.
+        Entrada molde = new Entrada();
+        molde.setOrden_id(orden);
+        List<Entrada> entradas = entradaRepository.findAll(Example.of(molde));
         if (!entradas.isEmpty()) {
             entradaRepository.deleteAll(entradas);
         }
