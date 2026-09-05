@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.controllers;
 import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.dto.CarritoResponse;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.CantidadRequest;
 import com.uade.tpo.demo.entity.dto.ItemCarritoRequest;
@@ -32,13 +33,12 @@ public class CarritoController {
     @Autowired
     private CarritoService carritoService;
 
+    // Devuelve un DTO y no la entidad Carrito: la entidad no tiene mapeada la
+    // coleccion de items, asi que sola no alcanza para que el front dibuje nada.
     @GetMapping
-    public ResponseEntity<Carrito> getCarrito(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
-        Carrito carrito = carritoService.obtenerCarritoPorUsuario(usuario.getId());
-        if (carrito != null) {
-            return ResponseEntity.ok(carrito);
-        }
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<CarritoResponse> getCarrito(@AuthenticationPrincipal Usuario usuario)
+            throws UsuarioNotFoundException {
+        return ResponseEntity.ok(carritoService.obtenerCarritoDetallado(usuario.getId()));
     }
 
     @PostMapping("/items")

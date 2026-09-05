@@ -23,6 +23,8 @@ import com.uade.tpo.demo.repository.UsuarioRepository;
 import com.uade.tpo.demo.util.PrecioUtils;
 
 import com.uade.tpo.demo.entity.Funcion;
+import com.uade.tpo.demo.entity.dto.CarritoResponse;
+import com.uade.tpo.demo.entity.dto.ItemCarritoResponse;
 import com.uade.tpo.demo.repository.FuncionRepository;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
@@ -32,6 +34,7 @@ import com.uade.tpo.demo.exceptions.CantidadInvalidaException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class CarritoServiceIMPL implements CarritoService {
@@ -215,6 +218,66 @@ public class CarritoServiceIMPL implements CarritoService {
         itemCarritoRepository.save(item);
 
         return carrito;
+    }
+
+        @Override
+    public CarritoResponse obtenerCarritoDetallado(Long usuarioId) throws UsuarioNotFoundException {
+        Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
+        List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
+
+        List<ItemCarritoResponse> itemsResponse = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (ItemCarrito item : items) {
+            String tipo;
+            Long referenciaId;
+            String nombre;
+            BigDecimal precioUnitario;
+
+            if (item.getProducto() != null) {
+                Producto producto = item.getProducto();
+                tipo = "PRODUCTO";
+                referenciaId = producto.getId();
+                nombre = producto.getNombre();
+                // Mismo calculo que usa el checkout: el precio que se muestra
+                // es el que se va a cobrar, con el descuento ya aplicado.
+                precioUnitario = PrecioUtils.precioConDescuento(producto.getPrecio(), producto.getDescuento());
+
+            } else if (item.getAsiento() != null) {
+                Asiento asiento = item.getAsiento();
+                tipo = "BUTACA";
+                referenciaId = asiento.getId();
+                nombre = "Fila " + asiento.getFila() + " - Butaca " + asiento.getNumero();
+                precioUnitario = carrito.getFuncion() != null
+                        ? carrito.getFuncion().getPrecio_base()
+                        : BigDecimal.ZERO;
+
+            } else {
+                // Item sin producto ni butaca: no deberia existir (agregarItem lo
+                // rechaza), pero si esta en la base no lo mostramos como valido.
+                continue;
+            }
+
+            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.getCantidad()));
+            total = total.add(subtotal);
+
+            itemsResponse.add(new ItemCarritoResponse(
+                    item.getId(),
+                    tipo,
+                    referenciaId,
+                    nombre,
+                    item.getCantidad(),
+                    precioUnitario.setScale(2, RoundingMode.HALF_UP),
+                    subtotal.setScale(2, RoundingMode.HALF_UP)));
+        }
+
+        Long funcionId = carrito.getFuncion() != null ? carrito.getFuncion().getId() : null;
+
+        return new CarritoResponse(
+                carrito.getId(),
+                funcionId,
+                itemsResponse,
+                total.setScale(2, RoundingMode.HALF_UP));
     }
 
     @Override
