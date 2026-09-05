@@ -3,6 +3,7 @@ package com.uade.tpo.demo.service;
 import com.uade.tpo.demo.entity.Entrada;
 import com.uade.tpo.demo.entity.Rol;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.OcupacionFuncionResponse;
 import com.uade.tpo.demo.exceptions.EntradaAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.EntradaNotFoundException;
 import com.uade.tpo.demo.repository.EntradaRepository;
@@ -43,8 +44,8 @@ public class EntradaServiceIMPL implements EntradaService {
     }
 
     @Override
-    public List<Entrada> getEntradasByFuncion(Long funcionId) {
-        return entradaRepository.findByFuncionId(funcionId);
+    public OcupacionFuncionResponse getAsientosOcupados(Long funcionId) {
+        return new OcupacionFuncionResponse(entradaRepository.findAsientoIdsByFuncionId(funcionId));
     }
 
     // La entrada pertenece al usuario a través de su orden (orden_id.usuario).

@@ -22,7 +22,8 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
     @Query("SELECT e FROM Entrada e WHERE e.orden_id.usuario.id = :usuarioId")
     List<Entrada> findByUsuarioId(@Param("usuarioId") Long usuarioId);
 
-    // Ocupación de una función: se navega funcion_id -> id.
-    @Query("SELECT e FROM Entrada e WHERE e.funcion_id.id = :funcionId")
-    List<Entrada> findByFuncionId(@Param("funcionId") Long funcionId);
+    // Ocupación de una función: solo los ids de asiento, sin traer la orden ni
+    // el usuario (evita exponer datos del comprador en el endpoint publico).
+    @Query("SELECT e.asiento_id.id FROM Entrada e WHERE e.funcion_id.id = :funcionId")
+    List<Long> findAsientoIdsByFuncionId(@Param("funcionId") Long funcionId);
 }

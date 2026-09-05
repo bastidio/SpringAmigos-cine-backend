@@ -2,6 +2,7 @@ package com.uade.tpo.demo.service;
 
 import com.uade.tpo.demo.entity.Entrada;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.OcupacionFuncionResponse;
 import com.uade.tpo.demo.exceptions.EntradaAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.EntradaNotFoundException;
 
@@ -22,6 +23,7 @@ public interface EntradaService {
     List<Entrada> getEntradasByUsuarioId(Long usuarioId, Usuario solicitante)
             throws EntradaAccesoDenegadoException;
 
-    // Ocupación de butacas de una función: qué asientos ya fueron vendidos.
-    List<Entrada> getEntradasByFuncion(Long funcionId);
+    // Ocupación de butacas de una función: solo ids de asiento, sin datos del
+    // comprador (endpoint publico, ver EntradaController).
+    OcupacionFuncionResponse getAsientosOcupados(Long funcionId);
 }

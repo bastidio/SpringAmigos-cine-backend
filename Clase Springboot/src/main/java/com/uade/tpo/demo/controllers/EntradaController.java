@@ -2,6 +2,7 @@ package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Entrada;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.OcupacionFuncionResponse;
 import com.uade.tpo.demo.exceptions.EntradaAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.EntradaNotFoundException;
 import com.uade.tpo.demo.service.EntradaService;
@@ -34,9 +35,11 @@ public class EntradaController {
     }
 
     // GET /entradas/funcion/{funcionId} -> Ocupación de butacas de una función.
+    // Publico (ver SecurityConfig): igual que /funciones y /peliculas, y solo
+    // expone ids de asiento (OcupacionFuncionResponse), nunca datos del comprador.
     @GetMapping("/funcion/{funcionId}")
-    public ResponseEntity<List<Entrada>> obtenerPorFuncion(@PathVariable Long funcionId) {
-        return ResponseEntity.ok(entradaService.getEntradasByFuncion(funcionId));
+    public ResponseEntity<OcupacionFuncionResponse> obtenerPorFuncion(@PathVariable Long funcionId) {
+        return ResponseEntity.ok(entradaService.getAsientosOcupados(funcionId));
     }
 
     // GET /entradas/{id} -> Una entrada puntual (solo el dueño o un ADMIN).
