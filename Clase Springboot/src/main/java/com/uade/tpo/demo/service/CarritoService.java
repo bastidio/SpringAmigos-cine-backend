@@ -9,6 +9,7 @@ import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
 import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
+import com.uade.tpo.demo.exceptions.CantidadInvalidaException;
 
 public interface CarritoService {
     Carrito obtenerCarritoPorUsuario(Long usuarioId) throws UsuarioNotFoundException;
@@ -17,13 +18,13 @@ public interface CarritoService {
     Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
                    StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
-                   ItemCarritoInvalidoException;
+                   ItemCarritoInvalidoException, CantidadInvalidaException;
 
     Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException;
 
     Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
-                   SeleccionButacaInvalidaException;
+                   SeleccionButacaInvalidaException, CantidadInvalidaException;
 
     BigDecimal calcularTotal(Long usuarioId) throws UsuarioNotFoundException;
 

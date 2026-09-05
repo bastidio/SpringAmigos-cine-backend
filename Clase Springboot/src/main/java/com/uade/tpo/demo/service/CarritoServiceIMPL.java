@@ -27,6 +27,7 @@ import com.uade.tpo.demo.repository.FuncionRepository;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+import com.uade.tpo.demo.exceptions.CantidadInvalidaException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -69,9 +70,16 @@ public class CarritoServiceIMPL implements CarritoService {
     public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
         throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
                    StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
-                   ItemCarritoInvalidoException {
+                   ItemCarritoInvalidoException, CantidadInvalidaException {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
+
+        // La cantidad solo aplica a productos: en la rama de butaca se fuerza a 1.
+        // Sin este chequeo, un null revienta con NPE al comparar contra el stock
+        // (500 crudo) y un negativo entra y deja el total del carrito en rojo.
+        if (productoId != null && (cantidad == null || cantidad <= 0)) {
+            throw new CantidadInvalidaException();
+        }
 
         if (productoId != null) {
             Producto producto = productoRepository.findById(productoId)
@@ -129,7 +137,7 @@ public class CarritoServiceIMPL implements CarritoService {
                     && !carrito.getFuncion().getId().equals(funcion.getId())) {
                 throw new SeleccionButacaInvalidaException();
             }
-            
+
             // Una butaca no se puede agregar dos veces al mismo carrito: al confirmar
             // chocaria contra el UNIQUE(funcion_id, asiento_id) y dejaria la compra
             // bloqueada hasta vaciar el carrito.
@@ -180,7 +188,12 @@ public class CarritoServiceIMPL implements CarritoService {
     @Transactional
     public Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
-                   SeleccionButacaInvalidaException {
+                   SeleccionButacaInvalidaException, CantidadInvalidaException {
+
+        if (nuevaCantidad == null || nuevaCantidad <= 0) {
+            throw new CantidadInvalidaException();
+        }
+
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
         ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
