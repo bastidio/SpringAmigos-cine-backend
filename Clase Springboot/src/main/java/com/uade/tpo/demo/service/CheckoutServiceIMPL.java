@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
+import com.uade.tpo.demo.exceptions.ReservaVencidaException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -40,7 +41,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
     @Override
     @Transactional // boton de emegencia
-    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException {
+    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException, ReservaVencidaException {
 
         // 1. buqueda x id
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
@@ -101,6 +102,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 totalCalculado = totalCalculado.add(precioConDescuento.multiply(BigDecimal.valueOf(item.getCantidad())));
                 
             } else if (item.getAsiento() != null) {
+                // La reserva temporal de la butaca tiene que seguir vigente al confirmar.
+                if (item.reservaVencida()) {
+                    throw new ReservaVencidaException();
+                }
+
                 Funcion funcion = carrito.getFuncion();
                 if (funcion == null) {
                     // Invariante: agregarItem garantiza que el carrito tenga funcion si hay butacas.

@@ -26,9 +26,11 @@ import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.repository.FuncionRepository;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -67,7 +69,8 @@ public class CarritoServiceIMPL implements CarritoService {
     @Transactional
     public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
         throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
-                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
+                   AsientoOcupadoException {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
@@ -122,6 +125,14 @@ public class CarritoServiceIMPL implements CarritoService {
                 throw new SeleccionButacaInvalidaException();
             }
 
+            // Si otro carrito tiene esta butaca reservada y la reserva sigue vigente, no se puede agregar.
+            LocalDateTime limite = LocalDateTime.now().minusMinutes(ItemCarrito.MINUTOS_RESERVA);
+            if (itemCarritoRepository
+                    .findByAsiento_IdAndCarrito_IdNotAndReservadoEnAfter(asientoId, carrito.getId(), limite)
+                    .isPresent()) {
+                throw new AsientoOcupadoException();
+            }
+
             // El modelo soporta una sola funcion por carrito: si ya hay butacas de otra, se rechaza.
             if (carrito.getFuncion() != null
                     && !carrito.getFuncion().getId().equals(funcion.getId())) {
@@ -137,6 +148,7 @@ public class CarritoServiceIMPL implements CarritoService {
             nuevoItem.setCarrito(carrito);
             nuevoItem.setCantidad(cantidad);
             nuevoItem.setAsiento(asiento);
+            nuevoItem.setReservadoEn(LocalDateTime.now());
 
             itemCarritoRepository.save(nuevoItem);
         }
