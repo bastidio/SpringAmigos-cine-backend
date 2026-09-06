@@ -51,9 +51,6 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
 
                                                 
-                                                .requestMatchers("/error").permitAll()
-
-                                                
                                                 .requestMatchers(HttpMethod.GET, "/productos/inactivos").hasAuthority("ADMIN")
 
                                                 // /error es el dispatch interno de Tomcat al que Spring redirige
