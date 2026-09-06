@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.controllers;
 import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Carrito;
+import com.uade.tpo.demo.entity.dto.CarritoResponse;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.CantidadRequest;
 import com.uade.tpo.demo.entity.dto.ItemCarritoRequest;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
+import com.uade.tpo.demo.exceptions.CantidadInvalidaException;
 
 import java.net.URI;
 
@@ -30,13 +33,12 @@ public class CarritoController {
     @Autowired
     private CarritoService carritoService;
 
+    // Devuelve un DTO y no la entidad Carrito: la entidad no tiene mapeada la
+    // coleccion de items, asi que sola no alcanza para que el front dibuje nada.
     @GetMapping
-    public ResponseEntity<Carrito> getCarrito(@AuthenticationPrincipal Usuario usuario) throws UsuarioNotFoundException {
-        Carrito carrito = carritoService.obtenerCarritoPorUsuario(usuario.getId());
-        if (carrito != null) {
-            return ResponseEntity.ok(carrito);
-        }
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<CarritoResponse> getCarrito(@AuthenticationPrincipal Usuario usuario)
+            throws UsuarioNotFoundException {
+        return ResponseEntity.ok(carritoService.obtenerCarritoDetallado(usuario.getId()));
     }
 
     @PostMapping("/items")
@@ -44,7 +46,8 @@ public class CarritoController {
             @AuthenticationPrincipal Usuario usuario,
             @RequestBody ItemCarritoRequest request)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
-                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
+                   ItemCarritoInvalidoException, CantidadInvalidaException {
 
         Carrito carritoActualizado = carritoService.agregarItem(
                 usuario.getId(),
@@ -72,7 +75,7 @@ public class CarritoController {
             @PathVariable Long itemCarritoId,
             @RequestBody CantidadRequest request)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
-                   SeleccionButacaInvalidaException {
+                   SeleccionButacaInvalidaException, CantidadInvalidaException {
 
         Carrito carritoActualizado = carritoService.modificarCantidad(usuario.getId(), itemCarritoId, request.getCantidad());
         return ResponseEntity.ok(carritoActualizado);

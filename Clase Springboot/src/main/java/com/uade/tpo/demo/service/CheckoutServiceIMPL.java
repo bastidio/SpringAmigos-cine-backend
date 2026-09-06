@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
+import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -44,7 +45,8 @@ public class CheckoutServiceIMPL implements CheckoutService {
     // otras entradas dentro del mismo loop. Sin esto, @Transactional solo
     // revierte ante RuntimeException y esa excepcion dejaba una orden a medias.
     @Transactional(rollbackFor = Exception.class)
-    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException {
+    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException,
+            AsientoOcupadoException, ProductoNotFoundException {
 
         // 1. buqueda x id
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
@@ -58,9 +60,17 @@ public class CheckoutServiceIMPL implements CheckoutService {
         }
 
         // 1.2. validamos el stock de todos los items de producto ANTES de confirmar nada
+        // 1.2. validamos stock y estado de todos los items de producto ANTES de confirmar nada
         for (ItemCarrito item : items) {
             if (item.getProducto() != null) {
                 Producto producto = item.getProducto();
+
+                // Un producto dado de baja no se vende, aunque haya quedado en un
+                // carrito viejo de antes de la baja (agregarItem ya lo valida al entrar).
+                if (!Boolean.TRUE.equals(producto.getActivo())) {
+                    throw new ProductoNotFoundException();
+                }
+
                 if (producto.getStock() == null || producto.getStock() < item.getCantidad()) {
                     throw new StockInsuficienteException();
                 }
@@ -140,6 +150,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
         // 6. se borra el los items del carrito
         itemCarritoRepository.deleteAll(items);
+
+        // El carrito vuelve a quedar libre: sin items y sin funcion asociada,
+        // para que el usuario pueda comprar butacas de otra funcion despues.
+        carrito.setFuncion(null);
+        carritoRepository.save(carrito);
 
         return nuevaOrden;
     }

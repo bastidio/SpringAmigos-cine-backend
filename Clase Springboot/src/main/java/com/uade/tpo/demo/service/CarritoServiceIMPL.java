@@ -23,13 +23,18 @@ import com.uade.tpo.demo.repository.UsuarioRepository;
 import com.uade.tpo.demo.util.PrecioUtils;
 
 import com.uade.tpo.demo.entity.Funcion;
+import com.uade.tpo.demo.entity.dto.CarritoResponse;
+import com.uade.tpo.demo.entity.dto.ItemCarritoResponse;
 import com.uade.tpo.demo.repository.FuncionRepository;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
+import com.uade.tpo.demo.exceptions.ItemCarritoInvalidoException;
 import com.uade.tpo.demo.exceptions.SeleccionButacaInvalidaException;
+import com.uade.tpo.demo.exceptions.CantidadInvalidaException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class CarritoServiceIMPL implements CarritoService {
@@ -67,9 +72,17 @@ public class CarritoServiceIMPL implements CarritoService {
     @Transactional
     public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
         throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
-                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException {
+                   StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
+                   ItemCarritoInvalidoException, CantidadInvalidaException {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
+
+        // La cantidad solo aplica a productos: en la rama de butaca se fuerza a 1.
+        // Sin este chequeo, un null revienta con NPE al comparar contra el stock
+        // (500 crudo) y un negativo entra y deja el total del carrito en rojo.
+        if (productoId != null && (cantidad == null || cantidad <= 0)) {
+            throw new CantidadInvalidaException();
+        }
 
         if (productoId != null) {
             Producto producto = productoRepository.findById(productoId)
@@ -128,6 +141,13 @@ public class CarritoServiceIMPL implements CarritoService {
                 throw new SeleccionButacaInvalidaException();
             }
 
+            // Una butaca no se puede agregar dos veces al mismo carrito: al confirmar
+            // chocaria contra el UNIQUE(funcion_id, asiento_id) y dejaria la compra
+            // bloqueada hasta vaciar el carrito.
+            if (itemCarritoRepository.findByCarritoAndAsiento(carrito, asiento).isPresent()) {
+                throw new SeleccionButacaInvalidaException();
+            }
+
             // ESTO es lo que faltaba: asociar la funcion al carrito.
             // Sin esta linea, el checkout nunca creaba la Entrada (el "agujero negro").
             carrito.setFuncion(funcion);
@@ -142,6 +162,13 @@ public class CarritoServiceIMPL implements CarritoService {
             nuevoItem.setAsiento(asiento);
 
             itemCarritoRepository.save(nuevoItem);
+        }
+
+        else {
+            // Ni producto ni butaca: la request no pide nada concreto. No se
+            // devuelve 201 en silencio (regla de oro: toda request tiene una
+            // response que refleja lo que realmente paso).
+            throw new ItemCarritoInvalidoException();
         }
 
         return carrito;
@@ -164,7 +191,12 @@ public class CarritoServiceIMPL implements CarritoService {
     @Transactional
     public Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
-                   SeleccionButacaInvalidaException {
+                   SeleccionButacaInvalidaException, CantidadInvalidaException {
+
+        if (nuevaCantidad == null || nuevaCantidad <= 0) {
+            throw new CantidadInvalidaException();
+        }
+
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
         ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
@@ -186,6 +218,66 @@ public class CarritoServiceIMPL implements CarritoService {
         itemCarritoRepository.save(item);
 
         return carrito;
+    }
+
+        @Override
+    public CarritoResponse obtenerCarritoDetallado(Long usuarioId) throws UsuarioNotFoundException {
+        Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
+        List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
+
+        List<ItemCarritoResponse> itemsResponse = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (ItemCarrito item : items) {
+            String tipo;
+            Long referenciaId;
+            String nombre;
+            BigDecimal precioUnitario;
+
+            if (item.getProducto() != null) {
+                Producto producto = item.getProducto();
+                tipo = "PRODUCTO";
+                referenciaId = producto.getId();
+                nombre = producto.getNombre();
+                // Mismo calculo que usa el checkout: el precio que se muestra
+                // es el que se va a cobrar, con el descuento ya aplicado.
+                precioUnitario = PrecioUtils.precioConDescuento(producto.getPrecio(), producto.getDescuento());
+
+            } else if (item.getAsiento() != null) {
+                Asiento asiento = item.getAsiento();
+                tipo = "BUTACA";
+                referenciaId = asiento.getId();
+                nombre = "Fila " + asiento.getFila() + " - Butaca " + asiento.getNumero();
+                precioUnitario = carrito.getFuncion() != null
+                        ? carrito.getFuncion().getPrecio_base()
+                        : BigDecimal.ZERO;
+
+            } else {
+                // Item sin producto ni butaca: no deberia existir (agregarItem lo
+                // rechaza), pero si esta en la base no lo mostramos como valido.
+                continue;
+            }
+
+            BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(item.getCantidad()));
+            total = total.add(subtotal);
+
+            itemsResponse.add(new ItemCarritoResponse(
+                    item.getId(),
+                    tipo,
+                    referenciaId,
+                    nombre,
+                    item.getCantidad(),
+                    precioUnitario.setScale(2, RoundingMode.HALF_UP),
+                    subtotal.setScale(2, RoundingMode.HALF_UP)));
+        }
+
+        Long funcionId = carrito.getFuncion() != null ? carrito.getFuncion().getId() : null;
+
+        return new CarritoResponse(
+                carrito.getId(),
+                funcionId,
+                itemsResponse,
+                total.setScale(2, RoundingMode.HALF_UP));
     }
 
     @Override
@@ -213,10 +305,17 @@ public class CarritoServiceIMPL implements CarritoService {
 
         return total.setScale(2, RoundingMode.HALF_UP);
     }
+
     @Override
     @Transactional
     public void vaciarCarrito(Long usuarioId) throws UsuarioNotFoundException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
         itemCarritoRepository.deleteAllByCarrito(carrito);
+
+        // Al vaciar el carrito se libera la funcion asociada. Sin esto el carrito
+        // queda pegado a la primera funcion para siempre y agregarItem rechaza
+        // cualquier butaca de otra funcion.
+        carrito.setFuncion(null);
+        carritoRepository.save(carrito);
     }
 }
