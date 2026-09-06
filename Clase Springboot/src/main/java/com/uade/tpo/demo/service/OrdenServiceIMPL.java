@@ -6,6 +6,9 @@ import com.uade.tpo.demo.entity.Orden;
 import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.Rol;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.EntradaResponse;
+import com.uade.tpo.demo.entity.dto.ItemOrdenResponse;
+import com.uade.tpo.demo.entity.dto.OrdenResponse;
 import com.uade.tpo.demo.exceptions.OrdenAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import com.uade.tpo.demo.repository.EntradaRepository;
@@ -16,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -56,6 +61,26 @@ public class OrdenServiceIMPL implements OrdenService {
         return ordenRepository.findAll();
     }
 
+    @Override
+    public OrdenResponse getOrdenResponseById(Long id, Usuario solicitante)
+            throws OrdenAccesoDenegadoException, OrdenNotFoundException {
+        return buildOrdenResponse(getOrdenById(id, solicitante));
+    }
+
+    @Override
+    public List<OrdenResponse> getOrdenesResponseByUsuarioId(Long usuarioId) {
+        return getOrdenesByUsuarioId(usuarioId).stream()
+                .map(this::buildOrdenResponse)
+                .toList();
+    }
+
+    @Override
+    public List<OrdenResponse> getAllOrdenesResponse() {
+        return getAllOrdenes().stream()
+                .map(this::buildOrdenResponse)
+                .toList();
+    }
+
     // Cancelar no es solo cambiar un string: hay que deshacer lo que el checkout
     // hizo. Se borran las Entrada de la orden (para liberar las butacas, que el
     // UNIQUE mantiene bloqueadas mientras exista la fila) y se devuelve el stock
@@ -63,7 +88,7 @@ public class OrdenServiceIMPL implements OrdenService {
     // algo falla en el medio, no quede una cancelacion a medias.
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Orden cancelOrden(Long id, Usuario solicitante)
+    public OrdenResponse cancelOrden(Long id, Usuario solicitante)
             throws OrdenAccesoDenegadoException, OrdenNotFoundException {
         Orden orden = getOrdenById(id, solicitante);
 
@@ -74,7 +99,8 @@ public class OrdenServiceIMPL implements OrdenService {
                     "La orden " + id + " no se puede cancelar porque su estado es " + orden.getEstado());
         }
 
-        // 1. Liberar butacas: borrar las entradas emitidas por esta orden.
+        // 1. Liberar butacas: borrar las entradas emitidas por esta orden. Se
+        // capturan antes de borrarlas para poder mostrarlas en la respuesta.
         List<Entrada> entradas = entradaRepository.findByOrden(orden);
         if (!entradas.isEmpty()) {
             entradaRepository.deleteAll(entradas);
@@ -92,7 +118,8 @@ public class OrdenServiceIMPL implements OrdenService {
         }
 
         orden.setEstado(ESTADO_CANCELADA);
-        return ordenRepository.save(orden);
+        Orden ordenCancelada = ordenRepository.save(orden);
+        return buildOrdenResponse(ordenCancelada, items, entradas);
     }
 
     private void validarPertenencia(Orden orden, Usuario solicitante) throws OrdenAccesoDenegadoException {
@@ -102,5 +129,51 @@ public class OrdenServiceIMPL implements OrdenService {
         if (!esAdmin && !esDueño) {
             throw new OrdenAccesoDenegadoException();
         }
+    }
+
+    // Arma el detalle de la orden a partir de las consultas que ya usa
+    // cancelOrden: ItemOrdenRepository.findByOrdenId y EntradaRepository.findByOrden,
+    // ya que Orden no tiene esas colecciones mapeadas.
+    private OrdenResponse buildOrdenResponse(Orden orden) {
+        List<ItemOrden> items = itemOrdenRepository.findByOrdenId(orden.getId());
+        List<Entrada> entradas = entradaRepository.findByOrden(orden);
+        return buildOrdenResponse(orden, items, entradas);
+    }
+
+    private OrdenResponse buildOrdenResponse(Orden orden, List<ItemOrden> items, List<Entrada> entradas) {
+        List<ItemOrdenResponse> productos = items.stream()
+                .map(this::mapItemToResponse)
+                .toList();
+        List<EntradaResponse> entradasResponse = entradas.stream()
+                .map(this::mapEntradaToResponse)
+                .toList();
+        return new OrdenResponse(orden.getId(), orden.getFecha(), orden.getTotal(), orden.getEstado(),
+                productos, entradasResponse);
+    }
+
+    private ItemOrdenResponse mapItemToResponse(ItemOrden item) {
+        BigDecimal precioUnitario = item.getPrecio_unitario() != null ? item.getPrecio_unitario() : BigDecimal.ZERO;
+        int cantidad = item.getCantidad() != null ? item.getCantidad() : 0;
+        BigDecimal subtotal = precioUnitario.multiply(BigDecimal.valueOf(cantidad));
+        String nombre = item.getProducto() != null ? item.getProducto().getNombre() : null;
+
+        return new ItemOrdenResponse(
+                nombre,
+                item.getCantidad(),
+                precioUnitario.setScale(2, RoundingMode.HALF_UP),
+                subtotal.setScale(2, RoundingMode.HALF_UP));
+    }
+
+    // Mismo mapeo que EntradaServiceIMPL.mapToResponse: pelicula, sala y horario
+    // salen de la funcion; fila y numero, del asiento.
+    private EntradaResponse mapEntradaToResponse(Entrada entrada) {
+        return new EntradaResponse(
+                entrada.getId(),
+                entrada.getFuncion().getPelicula().getTitulo(),
+                entrada.getFuncion().getSala().getNombre(),
+                entrada.getFuncion().getHorario(),
+                entrada.getAsiento().getFila(),
+                entrada.getAsiento().getNumero(),
+                entrada.getPrecio());
     }
 }

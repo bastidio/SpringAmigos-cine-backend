@@ -3,6 +3,7 @@ package com.uade.tpo.demo.service;
 import com.uade.tpo.demo.entity.Entrada;
 import com.uade.tpo.demo.entity.Rol;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.EntradaResponse;
 import com.uade.tpo.demo.entity.dto.OcupacionFuncionResponse;
 import com.uade.tpo.demo.exceptions.EntradaAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.EntradaNotFoundException;
@@ -19,28 +20,46 @@ public class EntradaServiceIMPL implements EntradaService {
     private EntradaRepository entradaRepository;
 
     @Override
-    public Entrada getEntradaById(Long id, Usuario solicitante)
+    public EntradaResponse getEntradaById(Long id, Usuario solicitante)
             throws EntradaNotFoundException, EntradaAccesoDenegadoException {
         Entrada entrada = entradaRepository.findById(id)
                 .orElseThrow(EntradaNotFoundException::new);
         validarPertenencia(entrada, solicitante);
-        return entrada;
+        return mapToResponse(entrada);
     }
 
     @Override
-    public List<Entrada> getMisEntradas(Usuario solicitante) {
-        return entradaRepository.findByOrdenUsuarioId(solicitante.getId());
+    public List<EntradaResponse> getMisEntradas(Usuario solicitante) {
+        return entradaRepository.findByOrdenUsuarioId(solicitante.getId()).stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Override
-    public List<Entrada> getEntradasByUsuarioId(Long usuarioId, Usuario solicitante)
+    public List<EntradaResponse> getEntradasByUsuarioId(Long usuarioId, Usuario solicitante)
             throws EntradaAccesoDenegadoException {
         boolean esAdmin = solicitante.getRol() == Rol.ADMIN;
         boolean esPropio = solicitante.getId().equals(usuarioId);
         if (!esAdmin && !esPropio) {
             throw new EntradaAccesoDenegadoException();
         }
-        return entradaRepository.findByOrdenUsuarioId(usuarioId);
+        return entradaRepository.findByOrdenUsuarioId(usuarioId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    // Arma el DTO de ticket a partir de la entidad: pelicula, sala y horario
+    // salen de la funcion; fila y numero, del asiento. Nunca se expone la orden
+    // ni el comprador (ver EntradaResponse).
+    private EntradaResponse mapToResponse(Entrada entrada) {
+        return new EntradaResponse(
+                entrada.getId(),
+                entrada.getFuncion().getPelicula().getTitulo(),
+                entrada.getFuncion().getSala().getNombre(),
+                entrada.getFuncion().getHorario(),
+                entrada.getAsiento().getFila(),
+                entrada.getAsiento().getNumero(),
+                entrada.getPrecio());
     }
 
     @Override

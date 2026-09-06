@@ -31,7 +31,7 @@ public class SalaController {
         if (result.isPresent()) {
             return ResponseEntity.ok(result.get());
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 
     // 3. POST: Crear una sala nueva

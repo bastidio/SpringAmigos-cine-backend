@@ -31,7 +31,7 @@ public class PeliculaController {
         if (result.isPresent()) {
             return ResponseEntity.ok(result.get());
         }
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 
     // POST: Agregar una nueva película a la cartelera

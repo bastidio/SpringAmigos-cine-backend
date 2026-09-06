@@ -1,7 +1,7 @@
 package com.uade.tpo.demo.controllers;
 
-import com.uade.tpo.demo.entity.Orden;
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.OrdenResponse;
 import com.uade.tpo.demo.exceptions.OrdenAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import com.uade.tpo.demo.service.OrdenService;
@@ -21,31 +21,31 @@ public class OrdenController {
 
     // GET /ordenes/{id} -> Obtener orden por su ID (solo el dueño o un ADMIN)
     @GetMapping("/{id}")
-    public ResponseEntity<Orden> obtenerPorId(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario)
+    public ResponseEntity<OrdenResponse> obtenerPorId(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario)
             throws OrdenAccesoDenegadoException, OrdenNotFoundException {
-        Orden orden = ordenService.getOrdenById(id, usuario);
+        OrdenResponse orden = ordenService.getOrdenResponseById(id, usuario);
         return ResponseEntity.ok(orden);
     }
 
     // GET /ordenes/mis-ordenes -> Historial de ordenes del usuario autenticado
     @GetMapping("/mis-ordenes")
-    public ResponseEntity<List<Orden>> obtenerMisOrdenes(@AuthenticationPrincipal Usuario usuario) {
-        List<Orden> ordenes = ordenService.getOrdenesByUsuarioId(usuario.getId());
+    public ResponseEntity<List<OrdenResponse>> obtenerMisOrdenes(@AuthenticationPrincipal Usuario usuario) {
+        List<OrdenResponse> ordenes = ordenService.getOrdenesResponseByUsuarioId(usuario.getId());
         return ResponseEntity.ok(ordenes);
     }
 
     // GET /ordenes -> Listado de todas las ordenes (panel admin, ver SecurityConfig)
     @GetMapping
-    public ResponseEntity<List<Orden>> obtenerTodas() {
-        List<Orden> ordenes = ordenService.getAllOrdenes();
+    public ResponseEntity<List<OrdenResponse>> obtenerTodas() {
+        List<OrdenResponse> ordenes = ordenService.getAllOrdenesResponse();
         return ResponseEntity.ok(ordenes);
     }
 
     // PUT /ordenes/{id}/cancelar -> Cancelar una orden (solo el dueño o un ADMIN)
     @PutMapping("/{id}/cancelar")
-    public ResponseEntity<Orden> cancelarOrden(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario)
+    public ResponseEntity<OrdenResponse> cancelarOrden(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario)
             throws OrdenAccesoDenegadoException, OrdenNotFoundException {
-        Orden ordenCancelada = ordenService.cancelOrden(id, usuario);
+        OrdenResponse ordenCancelada = ordenService.cancelOrden(id, usuario);
         return ResponseEntity.ok(ordenCancelada);
     }
 }
