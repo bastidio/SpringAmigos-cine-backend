@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.uade.tpo.demo.exceptions.PeliculaNotFoundException;
+import com.uade.tpo.demo.exceptions.SalaNotFoundException;
+
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +36,8 @@ public class FuncionController {
     }
 
     @PostMapping
-    public ResponseEntity<Funcion> createFuncion(@RequestBody FuncionRequest request) {
+    public ResponseEntity<Funcion> createFuncion(@RequestBody FuncionRequest request)
+            throws PeliculaNotFoundException, SalaNotFoundException {
         Funcion nuevaFuncion = funcionService.createFuncion(
                 request.getPeliculaId(),
                 request.getSalaId(),

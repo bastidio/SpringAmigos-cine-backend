@@ -6,6 +6,7 @@ import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.exceptions.ImagenProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ValidacionException;
+import com.uade.tpo.demo.exceptions.CategoriaNotFoundException;
 import com.uade.tpo.demo.repository.CategoriaRepository;
 import com.uade.tpo.demo.repository.ImagenProductoRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
@@ -71,9 +72,14 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
-    public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes) {
+    public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes)
+            throws CategoriaNotFoundException {
         validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
-        Categoria categoria = categoriaRepository.findById(categoriaId).orElseThrow();
+
+        // orElseThrow() pelado lanza NoSuchElementException, que nadie maneja y
+        // sale como 500 con stacktrace. Con la excepcion propia devuelve 404.
+        Categoria categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(CategoriaNotFoundException::new);
 
         Producto nuevoProducto = new Producto();
         nuevoProducto.setCategoria(categoria);
@@ -98,10 +104,12 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
-    public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento) throws ProductoNotFoundException {
+    public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento)
+            throws ProductoNotFoundException, CategoriaNotFoundException {
         validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
-        Categoria categoria = categoriaRepository.findById(categoriaId).orElseThrow();
+        Categoria categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(CategoriaNotFoundException::new);
 
         producto.setCategoria(categoria);
         producto.setNombre(nombre);

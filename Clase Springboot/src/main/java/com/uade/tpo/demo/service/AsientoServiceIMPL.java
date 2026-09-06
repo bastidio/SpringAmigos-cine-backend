@@ -7,6 +7,8 @@ import com.uade.tpo.demo.repository.SalaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.uade.tpo.demo.exceptions.SalaNotFoundException;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -30,8 +32,11 @@ public class AsientoServiceIMPL implements AsientoService {
     }
 
     @Override
-    public Asiento createAsiento(Long salaId, Integer fila, Integer numero) {
-        Sala sala = salaRepository.findById(salaId).orElseThrow();
+    public Asiento createAsiento(Long salaId, Integer fila, Integer numero) throws SalaNotFoundException {
+        // orElseThrow() pelado lanza NoSuchElementException, que nadie maneja y
+        // sale como 500 con stacktrace. Con la excepcion propia devuelve 404.
+        Sala sala = salaRepository.findById(salaId)
+                .orElseThrow(SalaNotFoundException::new);
 
         Asiento nuevoAsiento = new Asiento();
         nuevoAsiento.setSala(sala);

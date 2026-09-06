@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.service;
 import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Producto;
+import com.uade.tpo.demo.exceptions.CategoriaNotFoundException;
 import com.uade.tpo.demo.exceptions.ImagenProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 
@@ -17,9 +18,11 @@ public interface ProductoService {
     // Deshace deleteProducto: vuelve a poner activo = true.
     Producto reactivarProducto(Long id) throws ProductoNotFoundException;
 
-    Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes);
+    Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes)
+            throws CategoriaNotFoundException;
 
-    Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento) throws ProductoNotFoundException;
+    Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento)
+            throws ProductoNotFoundException, CategoriaNotFoundException;
 
     Producto actualizarStock(Long id, Integer nuevoStock) throws ProductoNotFoundException;
 

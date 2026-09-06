@@ -6,6 +6,7 @@ import com.uade.tpo.demo.entity.dto.ProductoRequest;
 import com.uade.tpo.demo.entity.dto.StockRequest;
 import com.uade.tpo.demo.exceptions.ImagenProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.CategoriaNotFoundException;
 import com.uade.tpo.demo.service.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +49,8 @@ public class ProductoController {
     }
 
     @PostMapping
-    public ResponseEntity<Producto> createProducto(@RequestBody ProductoRequest request) {
+    public ResponseEntity<Producto> createProducto(@RequestBody ProductoRequest request)
+            throws CategoriaNotFoundException {
         Producto nuevoProducto = productoService.createProducto(
                 request.getCategoriaId(),
                 request.getNombre(),
@@ -63,7 +65,7 @@ public class ProductoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Producto> updateProducto(@PathVariable Long id, @RequestBody ProductoRequest request)
-            throws ProductoNotFoundException {
+            throws ProductoNotFoundException, CategoriaNotFoundException {
         Producto productoActualizado = productoService.updateProducto(
                 id,
                 request.getCategoriaId(),
