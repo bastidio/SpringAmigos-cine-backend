@@ -182,7 +182,22 @@ public class CarritoServiceIMPL implements CarritoService {
         ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
                 .orElseThrow(ItemCarritoNotFoundException::new);
 
+        boolean eraButaca = item.getAsiento() != null;
+
         itemCarritoRepository.delete(item);
+
+        // Si era la ultima butaca del carrito, se libera la funcion. Sin esto el
+        // carrito queda pegado a esa funcion aunque no le quede ninguna butaca, y
+        // agregarItem rechaza las de cualquier otra (mismo caso que vaciarCarrito).
+        if (eraButaca) {
+            List<ItemCarrito> restantes = itemCarritoRepository.findAllByCarrito(carrito);
+            boolean quedanButacas = restantes.stream().anyMatch(i -> i.getAsiento() != null);
+
+            if (!quedanButacas) {
+                carrito.setFuncion(null);
+                carritoRepository.save(carrito);
+            }
+        }
 
         return carrito;
     }
