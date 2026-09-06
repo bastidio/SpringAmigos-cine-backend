@@ -22,19 +22,20 @@ public class Entrada {
     private Long id;
 
     
+    // La columna en la DB sigue llamandose orden_id / funcion_id / asiento_id
+    // (ver @JoinColumn); solo cambia el nombre del campo Java para poder usar
+    // queries derivadas sin que Spring Data confunda el "_" con un salto anidado.
     @ManyToOne
     @JoinColumn(name = "orden_id", referencedColumnName = "id")
-    private Orden orden_id;
+    private Orden orden;
 
-    
     @ManyToOne
     @JoinColumn(name = "funcion_id", referencedColumnName = "id")
-    private Funcion funcion_id;
+    private Funcion funcion;
 
-    
     @ManyToOne
     @JoinColumn(name = "asiento_id", referencedColumnName = "id")
-    private Asiento asiento_id;
+    private Asiento asiento;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal precio;

@@ -31,4 +31,10 @@ public class ProductoSpecifications {
         return (root, query, cb) -> cb.isTrue(root.get("activo"));
     }
 
+    // Baja logica: activo = false. Incluye tambien filas con activo NULL por si
+    // alguna quedo asi de una migracion vieja (cb.isFalse las excluiria).
+    public static Specification<Producto> noEstaActivo() {
+        return (root, query, cb) -> cb.or(cb.isFalse(root.get("activo")), cb.isNull(root.get("activo")));
+    }
+
 }

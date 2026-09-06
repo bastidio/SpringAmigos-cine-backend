@@ -50,6 +50,12 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(req -> req
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
 
+                                                
+                                                .requestMatchers("/error").permitAll()
+
+                                                
+                                                .requestMatchers(HttpMethod.GET, "/productos/inactivos").hasAuthority("ADMIN")
+
                                                 // /error es el dispatch interno de Tomcat al que Spring redirige
                                                 // cuando una excepcion con @ResponseStatus(reason=...) llama a
                                                 // sendError(). Ese dispatch no lleva el header Authorization, asi
@@ -63,12 +69,13 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.PATCH, CATALOGO).hasAuthority("ADMIN")
                                                 .requestMatchers(HttpMethod.DELETE, CATALOGO).hasAuthority("ADMIN")
 
-                                                // Panel admin: listado completo de ordenes de todos los usuarios.
-                                                // GET /ordenes/{id} y PUT /ordenes/{id}/cancelar quedan autenticados
-                                                // aca; la validacion de pertenencia (dueño de la orden u ADMIN) se
-                                                // resuelve en OrdenServiceIMPL, no en este matcher (bloque E).
+                                                
                                                 .requestMatchers(HttpMethod.GET, "/ordenes").hasAuthority("ADMIN")
                                                 .requestMatchers("/ordenes/**").authenticated()
+
+                                               
+                                                .requestMatchers(HttpMethod.GET, "/entradas/funcion/**").permitAll()
+                                                .requestMatchers("/entradas/**").authenticated()
 
                                                 .requestMatchers("/api/carritos/**", "/api/checkout/**")
                                                 .authenticated()

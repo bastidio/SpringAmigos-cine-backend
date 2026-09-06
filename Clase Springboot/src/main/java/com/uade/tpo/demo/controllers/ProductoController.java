@@ -31,6 +31,13 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.getProductos(nombre, categoriaId, precioMin, precioMax));
     }
 
+    // Solo ADMIN (ver SecurityConfig). Declarado antes de /{id} por claridad;
+    // Spring MVC ya prioriza la ruta literal sobre la variable igual.
+    @GetMapping("/inactivos")
+    public ResponseEntity<List<Producto>> getProductosInactivos() {
+        return ResponseEntity.ok(productoService.getProductosInactivos());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Producto> getProductoById(@PathVariable Long id) {
         Optional<Producto> result = productoService.getProductoById(id);
@@ -79,6 +86,13 @@ public class ProductoController {
     public ResponseEntity<Void> deleteProducto(@PathVariable Long id) throws ProductoNotFoundException {
         productoService.deleteProducto(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Deshace la baja logica de deleteProducto. Solo ADMIN (PATCH sobre CATALOGO
+    // en SecurityConfig).
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<Producto> reactivarProducto(@PathVariable Long id) throws ProductoNotFoundException {
+        return ResponseEntity.ok(productoService.reactivarProducto(id));
     }
 
     @PostMapping("/{id}/imagenes")

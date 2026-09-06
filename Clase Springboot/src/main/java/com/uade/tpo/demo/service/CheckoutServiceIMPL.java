@@ -123,9 +123,9 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 }
 
                 Entrada entrada = new Entrada();
-                entrada.setOrden_id(nuevaOrden);
-                entrada.setFuncion_id(funcion);
-                entrada.setAsiento_id(item.getAsiento());
+                entrada.setOrden(nuevaOrden);
+                entrada.setFuncion(funcion);
+                entrada.setAsiento(item.getAsiento());
                 entrada.setPrecio(funcion.getPrecio_base());
                 try {
                     // saveAndFlush fuerza el INSERT ahora, para que la violacion del UNIQUE
