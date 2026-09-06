@@ -49,8 +49,11 @@ public class CheckoutServiceIMPL implements CheckoutService {
             AsientoOcupadoException, ProductoNotFoundException {
 
         // 1. buqueda x id
+        // Si el usuario nunca agrego nada, no hay fila de carrito. Para el
+        // cliente eso es lo mismo que un carrito vacio: 400 con mensaje claro,
+        // no un RuntimeException que sale como 500 con stacktrace.
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("No se encontró el carrito"));
+                .orElseThrow(CarritoVacioException::new);
 
         // 1.1. los item del carrito x id el metodo echo x nosostros(mente colmena)
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);

@@ -9,6 +9,9 @@ import com.uade.tpo.demo.repository.SalaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.uade.tpo.demo.exceptions.PeliculaNotFoundException;
+import com.uade.tpo.demo.exceptions.SalaNotFoundException;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -36,9 +39,15 @@ public class FuncionServiceIMPL implements FuncionService {
     }
 
     @Override
-    public Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, BigDecimal precioBase) {
-        Pelicula pelicula = peliculaRepository.findById(peliculaId).orElseThrow();
-        Sala sala = salaRepository.findById(salaId).orElseThrow();
+    public Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, BigDecimal precioBase)
+            throws PeliculaNotFoundException, SalaNotFoundException {
+
+        // orElseThrow() pelado lanza NoSuchElementException, que nadie maneja y
+        // sale como 500 con stacktrace. Con las excepciones propias devuelve 404.
+        Pelicula pelicula = peliculaRepository.findById(peliculaId)
+                .orElseThrow(PeliculaNotFoundException::new);
+        Sala sala = salaRepository.findById(salaId)
+                .orElseThrow(SalaNotFoundException::new);
 
         Funcion nuevaFuncion = new Funcion();
         nuevaFuncion.setPelicula(pelicula);
