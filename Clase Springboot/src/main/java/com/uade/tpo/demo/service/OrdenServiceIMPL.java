@@ -7,6 +7,7 @@ import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.Rol;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exceptions.OrdenAccesoDenegadoException;
+import com.uade.tpo.demo.exceptions.OrdenNoCancelableException;
 import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import com.uade.tpo.demo.repository.EntradaRepository;
 import com.uade.tpo.demo.repository.ItemOrdenRepository;
@@ -70,7 +71,7 @@ public class OrdenServiceIMPL implements OrdenService {
         // Guarda de estado: solo se cancela una orden confirmada. Sin esto, una
         // segunda llamada devolveria el stock otra vez (doble reintegro).
         if (!ESTADO_CONFIRMADA.equals(orden.getEstado())) {
-            throw new IllegalStateException(
+            throw new OrdenNoCancelableException(
                     "La orden " + id + " no se puede cancelar porque su estado es " + orden.getEstado());
         }
 

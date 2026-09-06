@@ -53,12 +53,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
-    // Estado de negocio invalido (ej: cancelar una orden que no esta CONFIRMADA).
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+   // La orden no puede cancelarse (ya paso la funcion o ya fue cancelada).
+    @ExceptionHandler(OrdenNoCancelableException.class)
+    public ResponseEntity<ErrorResponse> handleOrdenNoCancelable(OrdenNoCancelableException ex) {
         ErrorResponse body = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
-                "Conflicto de estado",
+                "Operacion no permitida",
                 ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
