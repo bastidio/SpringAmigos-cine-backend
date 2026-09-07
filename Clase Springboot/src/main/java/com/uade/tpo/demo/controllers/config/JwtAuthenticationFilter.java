@@ -30,9 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        // Desviacion deliberada del modelo de clase: "Bearer" sin el espacio final
-        // tambien matchea "BearerAlgo", y ademas jwt = authHeader.substring(7) te
-        // corta un caracter de mas del token real.
+        // Con el espacio final: "Bearer" solo matchea "BearerAlgo" y descuadra el substring(7).
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -43,10 +41,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             userEmail = jwtService.extractUsername(jwt);
         } catch (JwtException e) {
-            // Desviacion deliberada del modelo de clase: en el suyo, un token invalido o
-            // vencido revienta con una excepcion de JJWT sin capturar y termina en un 500
-            // sin cuerpo util. Aca lo dejamos pasar sin autenticar; sin un Authentication
-            // en el contexto, Spring Security responde 401 a traves del AuthenticationEntryPoint.
+            // Token invalido/vencido: lo dejamos pasar sin autenticar, Security responde 401 solo.
             filterChain.doFilter(request, response);
             return;
         }

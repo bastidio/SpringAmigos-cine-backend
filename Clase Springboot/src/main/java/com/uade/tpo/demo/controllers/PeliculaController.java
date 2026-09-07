@@ -18,13 +18,11 @@ public class PeliculaController {
     @Autowired
     private PeliculaService peliculaService;
 
-    // GET: Traer toda la cartelera
     @GetMapping
     public ResponseEntity<List<Pelicula>> getPeliculas() {
         return ResponseEntity.ok(peliculaService.getPeliculas());
     }
 
-    // GET: Buscar una peli específica
     @GetMapping("/{id}")
     public ResponseEntity<Pelicula> getPeliculaById(@PathVariable Long id) {
         Optional<Pelicula> result = peliculaService.getPeliculaById(id);
@@ -34,7 +32,6 @@ public class PeliculaController {
         return ResponseEntity.notFound().build();
     }
 
-    // POST: Agregar una nueva película a la cartelera
     @PostMapping
     public ResponseEntity<Pelicula> createPelicula(@RequestBody PeliculaRequest request) {
         Pelicula nuevaPelicula = peliculaService.createPelicula(

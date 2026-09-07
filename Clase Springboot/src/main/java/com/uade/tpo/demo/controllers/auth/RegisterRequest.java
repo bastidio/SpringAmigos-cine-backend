@@ -5,8 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Sin campo rol: el registro siempre crea usuarios con rol USER (ver
-// AuthenticationService.register). Los ADMIN se crean a mano en la base.
+// Sin campo rol a proposito: el registro siempre crea USER, para que sea ADMIN hay que hacer update desde la BD.
 @Data
 @Builder
 @AllArgsConstructor

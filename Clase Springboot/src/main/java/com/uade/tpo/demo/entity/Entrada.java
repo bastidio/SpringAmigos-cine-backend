@@ -21,10 +21,7 @@ public class Entrada {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    
-    // La columna en la DB sigue llamandose orden_id / funcion_id / asiento_id
-    // (ver @JoinColumn); solo cambia el nombre del campo Java para poder usar
-    // queries derivadas sin que Spring Data confunda el "_" con un salto anidado.
+    // Campo Java sin "_" para que Spring Data no confunda las queries derivadas con un salto anidado.
     @ManyToOne
     @JoinColumn(name = "orden_id", referencedColumnName = "id")
     private Orden orden;

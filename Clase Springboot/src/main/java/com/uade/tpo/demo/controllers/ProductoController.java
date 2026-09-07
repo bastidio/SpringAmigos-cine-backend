@@ -32,8 +32,7 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.getProductos(nombre, categoriaId, precioMin, precioMax));
     }
 
-    // Solo ADMIN (ver SecurityConfig). Declarado antes de /{id} por claridad;
-    // Spring MVC ya prioriza la ruta literal sobre la variable igual.
+    // Solo ADMIN (ver SecurityConfig).
     @GetMapping("/inactivos")
     public ResponseEntity<List<Producto>> getProductosInactivos() {
         return ResponseEntity.ok(productoService.getProductosInactivos());

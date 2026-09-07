@@ -48,9 +48,7 @@ public class EntradaServiceIMPL implements EntradaService {
                 .toList();
     }
 
-    // Arma el DTO de ticket a partir de la entidad: pelicula, sala y horario
-    // salen de la funcion; fila y numero, del asiento. Nunca se expone la orden
-    // ni el comprador (ver EntradaResponse).
+    // Nunca se expone la orden ni el comprador (ver EntradaResponse).
     private EntradaResponse mapToResponse(Entrada entrada) {
         return new EntradaResponse(
                 entrada.getId(),
@@ -64,17 +62,14 @@ public class EntradaServiceIMPL implements EntradaService {
 
     @Override
     public OcupacionFuncionResponse getAsientosOcupados(Long funcionId) {
-        // Se traen las entradas de la funcion y se proyecta solo el id de asiento:
-        // la respuesta publica (OcupacionFuncionResponse) nunca lleva la orden ni
-        // el comprador, solo la lista de butacas ocupadas.
+        // Endpoint publico: solo el id de asiento, nada del comprador.
         List<Long> asientosOcupados = entradaRepository.findByFuncionId(funcionId).stream()
                 .map(entrada -> entrada.getAsiento().getId())
                 .toList();
         return new OcupacionFuncionResponse(asientosOcupados);
     }
 
-    // La entrada pertenece al usuario a través de su orden (orden.usuario).
-    // Mismo patrón que OrdenServiceIMPL.validarPertenencia.
+    // Mismo patrón que OrdenServiceIMPL.validarPertenencia (via orden.usuario).
     private void validarPertenencia(Entrada entrada, Usuario solicitante)
             throws EntradaAccesoDenegadoException {
         boolean esAdmin = solicitante.getRol() == Rol.ADMIN;

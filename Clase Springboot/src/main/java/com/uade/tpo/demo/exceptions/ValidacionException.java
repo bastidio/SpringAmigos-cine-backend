@@ -2,9 +2,7 @@ package com.uade.tpo.demo.exceptions;
 
 import java.util.Map;
 
-// Validacion manual de los request (sin bean validation / @Valid).
-// Lleva el detalle campo -> motivo para armar un 400 informativo en
-// GlobalExceptionHandler.
+// Validacion manual (sin @Valid), lleva el detalle campo -> motivo para el 400.
 public class ValidacionException extends RuntimeException {
 
     private final transient Map<String, String> errores;

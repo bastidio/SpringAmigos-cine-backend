@@ -76,8 +76,6 @@ public class ProductoServiceIMPL implements ProductoService {
             throws CategoriaNotFoundException {
         validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
 
-        // orElseThrow() pelado lanza NoSuchElementException, que nadie maneja y
-        // sale como 500 con stacktrace. Con la excepcion propia devuelve 404.
         Categoria categoria = categoriaRepository.findById(categoriaId)
                 .orElseThrow(CategoriaNotFoundException::new);
 
@@ -166,9 +164,7 @@ public class ProductoServiceIMPL implements ProductoService {
         imagenProductoRepository.delete(imagen);
     }
 
-    // Validacion manual del alta/edicion de un producto. Junta todos los errores
-    // en un mapa campo -> motivo y, si hay alguno, corta con ValidacionException
-    // (GlobalExceptionHandler la traduce a 400).
+    // Junta todos los errores en un mapa y corta con ValidacionException (400) si hay alguno.
     private void validarDatosProducto(Long categoriaId, String nombre, BigDecimal precio, Integer stock, BigDecimal descuento) {
         Map<String, String> errores = new LinkedHashMap<>();
 

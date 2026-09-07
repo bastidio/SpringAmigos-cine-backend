@@ -25,19 +25,14 @@ public class SecurityConfig {
         private final JwtAuthenticationFilter jwtAuthFilter;
         private final AuthenticationProvider authenticationProvider;
 
-        // Desviacion deliberada del modelo de clase: sin un AuthenticationEntryPoint
-        // propio, Spring Security responde 403 cuando falta el token en un endpoint
-        // protegido (lo resuelve el filtro por defecto de autorizacion). Con este bean,
-        // "sin token" y "token invalido/vencido" (ver JwtAuthenticationFilter) responden
-        // los dos 401, que es lo correcto semanticamente: no estas autenticado.
+        // Sin el AuthenticationEntryPoint, falta de token da 403 en vez de 401. Con este bean, sin token y token invalido responden los dos 401.
         @Bean
         public AuthenticationEntryPoint authenticationEntryPoint() {
                 return (request, response, authException) -> response
                                 .sendError(HttpServletResponse.SC_UNAUTHORIZED, "No autenticado");
         }
 
-        // Catalogo de lectura publica; la escritura (alta/edicion/baja) queda
-        // reservada al staff del cine.
+        // get publico pero alta/edicion/baja, solo ADMIN
         private static final String[] CATALOGO = {
                         "/productos/**", "/peliculas/**", "/funciones/**",
                         "/categorias/**", "/salas/**", "/asientos/**"
@@ -53,11 +48,8 @@ public class SecurityConfig {
                                                 
                                                 .requestMatchers(HttpMethod.GET, "/productos/inactivos").hasAuthority("ADMIN")
 
-                                                // /error es el dispatch interno de Tomcat al que Spring redirige
-                                                // cuando una excepcion con @ResponseStatus(reason=...) llama a
-                                                // sendError(). Ese dispatch no lleva el header Authorization, asi
-                                                // que sin este permitAll cae en anyRequest().authenticated() y
-                                                // todos los errores de negocio salen como 401 en vez de su codigo.
+                                                // /error es el dispatch interno de Tomcat y no lleva el Authorization header,
+                                                // sin este permitAll los errores de negocio salian como 401 en vez de su codigo real.
                                                 .requestMatchers("/error").permitAll()
 
                                                 .requestMatchers(HttpMethod.GET, CATALOGO).permitAll()

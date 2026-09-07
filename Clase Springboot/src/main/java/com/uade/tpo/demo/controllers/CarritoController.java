@@ -23,9 +23,7 @@ import com.uade.tpo.demo.exceptions.CantidadInvalidaException;
 
 import java.net.URI;
 
-// El usuarioId ya no viaja en el path: sale del principal autenticado
-// (@AuthenticationPrincipal), asi se cierra el IDOR que dejaba operar el
-// carrito de cualquier usuario con solo cambiar el id de la URL.
+// usuarioId sale del @AuthenticationPrincipal y no del path para evitar que un usuario manipule carritos ajenos.
 @RestController
 @RequestMapping("/api/carritos")
 public class CarritoController {
@@ -33,8 +31,7 @@ public class CarritoController {
     @Autowired
     private CarritoService carritoService;
 
-    // Devuelve un DTO y no la entidad Carrito: la entidad no tiene mapeada la
-    // coleccion de items, asi que sola no alcanza para que el front dibuje nada.
+    // DTO y no la entidad: Carrito no tiene mapeada la coleccion de items.
     @GetMapping
     public ResponseEntity<CarritoResponse> getCarrito(@AuthenticationPrincipal Usuario usuario)
             throws UsuarioNotFoundException {

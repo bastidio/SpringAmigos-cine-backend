@@ -16,15 +16,13 @@ import java.util.Optional;
 public class SalaController {
 
     @Autowired
-    private SalaService salaService; // Inyección del cerebro (Service)
+    private SalaService salaService;
 
-    // 1. GET: Traer todas las salas
     @GetMapping
     public ResponseEntity<List<Sala>> getSalas() {
         return ResponseEntity.ok(salaService.getSalas());
     }
 
-    // 2. GET por ID: Buscar una sala específica
     @GetMapping("/{id}")
     public ResponseEntity<Sala> getSalaById(@PathVariable Long id) {
         Optional<Sala> result = salaService.getSalaById(id);
@@ -34,11 +32,9 @@ public class SalaController {
         return ResponseEntity.notFound().build();
     }
 
-    // 3. POST: Crear una sala nueva
     @PostMapping
     public ResponseEntity<Sala> createSala(@RequestBody SalaRequest salaRequest) {
         Sala nuevaSala = salaService.createSala(salaRequest.getNombre(), salaRequest.getCapacidad());
-        // Devuelve 201 Created y avisa en qué URL quedó guardada la nueva sala
         return ResponseEntity.created(URI.create("/salas/" + nuevaSala.getId())).body(nuevaSala);
     }
 }

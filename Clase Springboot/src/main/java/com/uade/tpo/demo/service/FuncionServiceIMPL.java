@@ -42,8 +42,6 @@ public class FuncionServiceIMPL implements FuncionService {
     public Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, BigDecimal precioBase)
             throws PeliculaNotFoundException, SalaNotFoundException {
 
-        // orElseThrow() pelado lanza NoSuchElementException, que nadie maneja y
-        // sale como 500 con stacktrace. Con las excepciones propias devuelve 404.
         Pelicula pelicula = peliculaRepository.findById(peliculaId)
                 .orElseThrow(PeliculaNotFoundException::new);
         Sala sala = salaRepository.findById(salaId)

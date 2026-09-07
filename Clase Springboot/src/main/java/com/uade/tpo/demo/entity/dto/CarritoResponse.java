@@ -6,9 +6,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-// Respuesta del carrito con todo lo que el frontend necesita para dibujarlo:
-// los items y el total ya calculado. La entidad Carrito sola no alcanza porque
-// no tiene la coleccion de items mapeada.
+// Carrito no tiene mapeada la coleccion de items, por eso este DTO en vez de la entidad.
 @Data
 @AllArgsConstructor
 public class CarritoResponse {

@@ -28,9 +28,7 @@ import lombok.ToString;
 @Entity
 @Data
 @Builder
-// @NoArgsConstructor y @AllArgsConstructor son obligatorios al usar @Builder en una
-// entidad JPA: Hibernate necesita el constructor vacio y @Builder lo elimina.
-// Es el mismo error que rompio POST /productos con Categoria en la Etapa 1.
+// @Builder elimina el constructor vacio y Hibernate lo necesita, por eso van los otros dos.
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "usuario")
@@ -39,9 +37,7 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Dato de perfil, NO se usa para autenticar. El campo se llama nombreUsuario
-    // y no username porque getUsername() esta reservado por UserDetails y tiene
-    // que devolver el email, que es nuestro identificador de login.
+    // Dato de perfil nomas: getUsername() esta reservado por UserDetails y tiene que devolver el email.
     @Column(name = "username")
     private String nombreUsuario;
 
@@ -68,12 +64,7 @@ public class Usuario implements UserDetails {
     @EqualsAndHashCode.Exclude
     private List<Orden> orders;
 
-    // Desviacion deliberada del modelo de clase: @JsonIgnore en los seis getters
-    // heredados de UserDetails de aca para abajo. Sin esto, Jackson los serializa
-    // como si fueran propiedades del bean (authorities, accountNonExpired, etc.)
-    // y el JSON de cualquier Usuario -incluido el que viaja dentro de Orden- se
-    // ensucia con datos de autenticacion que no son del dominio.
-
+    // @JsonIgnore en los getters de UserDetails, si no Jackson los serializa como si fueran del dominio.
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {

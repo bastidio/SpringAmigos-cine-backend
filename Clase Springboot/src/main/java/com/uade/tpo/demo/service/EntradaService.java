@@ -10,20 +10,16 @@ import java.util.List;
 
 public interface EntradaService {
 
-    // "solicitante" es el usuario autenticado. getEntradaById y getEntradasByUsuarioId
-    // validan que sea el dueño de la entrada (via orden.usuario) o tenga rol ADMIN,
-    // mismo criterio anti-IDOR que OrdenService.
+    // dueño de la entrada o ADMIN.
     EntradaResponse getEntradaById(Long id, Usuario solicitante)
             throws EntradaNotFoundException, EntradaAccesoDenegadoException;
 
-    // Historial de entradas del usuario autenticado.
     List<EntradaResponse> getMisEntradas(Usuario solicitante);
 
-    // Entradas de un usuario puntual. Solo ADMIN o el propio usuario (anti-IDOR).
+    // Solo ADMIN o el propio usuario.
     List<EntradaResponse> getEntradasByUsuarioId(Long usuarioId, Usuario solicitante)
             throws EntradaAccesoDenegadoException;
 
-    // Ocupación de butacas de una función: solo ids de asiento, sin datos del
-    // comprador (endpoint publico, ver EntradaController).
+    // Endpoint publico: solo ids de asiento, sin datos del comprador.
     OcupacionFuncionResponse getAsientosOcupados(Long funcionId);
 }

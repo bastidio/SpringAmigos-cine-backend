@@ -5,9 +5,7 @@ import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-// Un item del carrito ya resuelto para el frontend: no importa si por dentro
-// es un producto o una butaca, sale con la misma forma. El itemId es el que
-// necesita el front para el DELETE y el PUT sobre /api/carritos/items/{id}.
+// Producto o butaca, sale con la misma forma. itemId es el que usa el front para el DELETE/PUT.
 @Data
 @AllArgsConstructor
 public class ItemCarritoResponse {

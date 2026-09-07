@@ -33,8 +33,6 @@ public class AsientoServiceIMPL implements AsientoService {
 
     @Override
     public Asiento createAsiento(Long salaId, Integer fila, Integer numero) throws SalaNotFoundException {
-        // orElseThrow() pelado lanza NoSuchElementException, que nadie maneja y
-        // sale como 500 con stacktrace. Con la excepcion propia devuelve 404.
         Sala sala = salaRepository.findById(salaId)
                 .orElseThrow(SalaNotFoundException::new);
 

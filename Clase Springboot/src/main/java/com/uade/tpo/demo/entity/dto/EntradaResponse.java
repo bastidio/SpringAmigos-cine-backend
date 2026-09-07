@@ -6,8 +6,7 @@ import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-// Una entrada ya resuelta para mostrar como ticket: lo necesario para
-// identificarla y mostrarla, sin arrastrar la Orden completa anidada.
+// Entrada resuelta para el ticket, sin arrastrar la Orden completa anidada.
 @Data
 @AllArgsConstructor
 public class EntradaResponse {

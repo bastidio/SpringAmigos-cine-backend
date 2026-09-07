@@ -81,26 +81,20 @@ public class OrdenServiceIMPL implements OrdenService {
                 .toList();
     }
 
-    // Cancelar no es solo cambiar un string: hay que deshacer lo que el checkout
-    // hizo. Se borran las Entrada de la orden (para liberar las butacas, que el
-    // UNIQUE mantiene bloqueadas mientras exista la fila) y se devuelve el stock
-    // de cada ItemOrden de producto. rollbackFor = Exception.class para que, si
-    // algo falla en el medio, no quede una cancelacion a medias.
+    // Cancelar hay que deshacer lo del checkout: borrar entradas (libera butacas) y devolver stock.
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrdenResponse cancelOrden(Long id, Usuario solicitante)
             throws OrdenAccesoDenegadoException, OrdenNotFoundException {
         Orden orden = getOrdenById(id, solicitante);
 
-        // Guarda de estado: solo se cancela una orden confirmada. Sin esto, una
-        // segunda llamada devolveria el stock otra vez (doble reintegro).
+        // Solo se cancela una orden confirmada, si no una segunda llamada duplicaria el reintegro de stock.
         if (!ESTADO_CONFIRMADA.equals(orden.getEstado())) {
             throw new IllegalStateException(
                     "La orden " + id + " no se puede cancelar porque su estado es " + orden.getEstado());
         }
 
-        // 1. Liberar butacas: borrar las entradas emitidas por esta orden. Se
-        // capturan antes de borrarlas para poder mostrarlas en la respuesta.
+        // Guardamos las butacas antes de borrarlas para poder mostrarlas en la respuesta.
         List<Entrada> entradas = entradaRepository.findByOrden(orden);
         if (!entradas.isEmpty()) {
             entradaRepository.deleteAll(entradas);
@@ -131,9 +125,7 @@ public class OrdenServiceIMPL implements OrdenService {
         }
     }
 
-    // Arma el detalle de la orden a partir de las consultas que ya usa
-    // cancelOrden: ItemOrdenRepository.findByOrdenId y EntradaRepository.findByOrden,
-    // ya que Orden no tiene esas colecciones mapeadas.
+    // Orden no tiene mapeadas sus colecciones, por eso se consultan aparte.
     private OrdenResponse buildOrdenResponse(Orden orden) {
         List<ItemOrden> items = itemOrdenRepository.findByOrdenId(orden.getId());
         List<Entrada> entradas = entradaRepository.findByOrden(orden);
@@ -164,8 +156,7 @@ public class OrdenServiceIMPL implements OrdenService {
                 subtotal.setScale(2, RoundingMode.HALF_UP));
     }
 
-    // Mismo mapeo que EntradaServiceIMPL.mapToResponse: pelicula, sala y horario
-    // salen de la funcion; fila y numero, del asiento.
+    // Mismo mapeo que EntradaServiceIMPL.mapToResponse.
     private EntradaResponse mapEntradaToResponse(Entrada entrada) {
         return new EntradaResponse(
                 entrada.getId(),

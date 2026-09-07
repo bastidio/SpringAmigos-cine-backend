@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.uade.tpo.demo.entity.dto.ErrorResponse;
 
 
-// Maneja errores de validacion y de negocio de manera centralizada, devolviendo un JSON consistente para el frontend.
+// Centraliza los errores para que siempre vuelva un JSON consistente.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

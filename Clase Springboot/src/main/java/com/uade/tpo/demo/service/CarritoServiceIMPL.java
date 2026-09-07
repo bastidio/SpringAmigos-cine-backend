@@ -77,9 +77,7 @@ public class CarritoServiceIMPL implements CarritoService {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
-        // La cantidad solo aplica a productos: en la rama de butaca se fuerza a 1.
-        // Sin este chequeo, un null revienta con NPE al comparar contra el stock
-        // (500 crudo) y un negativo entra y deja el total del carrito en rojo.
+        // Solo aplica a productos (butaca fuerza cantidad a 1). Sin esto, null o negativo rompian todo.
         if (productoId != null && (cantidad == null || cantidad <= 0)) {
             throw new CantidadInvalidaException();
         }
@@ -141,21 +139,16 @@ public class CarritoServiceIMPL implements CarritoService {
                 throw new SeleccionButacaInvalidaException();
             }
 
-            // Una butaca no se puede agregar dos veces al mismo carrito: al confirmar
-            // chocaria contra el UNIQUE(funcion_id, asiento_id) y dejaria la compra
-            // bloqueada hasta vaciar el carrito.
+            // No se puede agregar la misma butaca dos veces (choca contra el UNIQUE al confirmar).
             if (itemCarritoRepository.findByCarritoAndAsiento(carrito, asiento).isPresent()) {
                 throw new SeleccionButacaInvalidaException();
             }
 
-            // ESTO es lo que faltaba: asociar la funcion al carrito.
-            // Sin esta linea, el checkout nunca creaba la Entrada (el "agujero negro").
+            // Sin asociar la funcion al carrito, el checkout nunca creaba la Entrada.
             carrito.setFuncion(funcion);
             carritoRepository.save(carrito);
 
-            // Una butaca es unitaria: se ignora la cantidad recibida y se fuerza a 1.
-            // Si no, calcularTotal (precio_base x cantidad) queda desincronizado del
-            // checkout, que cobra precio_base una sola vez y crea una unica Entrada.
+            // Butaca es unitaria, se ignora la cantidad recibida (si no, calcularTotal se desincroniza del checkout).
             ItemCarrito nuevoItem = new ItemCarrito();
             nuevoItem.setCarrito(carrito);
             nuevoItem.setCantidad(1);
@@ -165,9 +158,7 @@ public class CarritoServiceIMPL implements CarritoService {
         }
 
         else {
-            // Ni producto ni butaca: la request no pide nada concreto. No se
-            // devuelve 201 en silencio (regla de oro: toda request tiene una
-            // response que refleja lo que realmente paso).
+            // Ni producto ni butaca: no devolvemos 201 en silencio.
             throw new ItemCarritoInvalidoException();
         }
 
@@ -186,9 +177,7 @@ public class CarritoServiceIMPL implements CarritoService {
 
         itemCarritoRepository.delete(item);
 
-        // Si era la ultima butaca del carrito, se libera la funcion. Sin esto el
-        // carrito queda pegado a esa funcion aunque no le quede ninguna butaca, y
-        // agregarItem rechaza las de cualquier otra (mismo caso que vaciarCarrito).
+        // Si era la ultima butaca, liberamos la funcion (si no, queda pegado y agregarItem rechaza otras).
         if (eraButaca) {
             List<ItemCarrito> restantes = itemCarritoRepository.findAllByCarrito(carrito);
             boolean quedanButacas = restantes.stream().anyMatch(i -> i.getAsiento() != null);
@@ -254,8 +243,7 @@ public class CarritoServiceIMPL implements CarritoService {
                 tipo = "PRODUCTO";
                 referenciaId = producto.getId();
                 nombre = producto.getNombre();
-                // Mismo calculo que usa el checkout: el precio que se muestra
-                // es el que se va a cobrar, con el descuento ya aplicado.
+                // Mismo calculo que el checkout, para mostrar el precio con descuento ya aplicado.
                 precioUnitario = PrecioUtils.precioConDescuento(producto.getPrecio(), producto.getDescuento());
 
             } else if (item.getAsiento() != null) {
@@ -268,8 +256,7 @@ public class CarritoServiceIMPL implements CarritoService {
                         : BigDecimal.ZERO;
 
             } else {
-                // Item sin producto ni butaca: no deberia existir (agregarItem lo
-                // rechaza), pero si esta en la base no lo mostramos como valido.
+                // No deberia existir (agregarItem lo rechaza), pero por las dudas no lo mostramos.
                 continue;
             }
 
@@ -327,9 +314,7 @@ public class CarritoServiceIMPL implements CarritoService {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
         itemCarritoRepository.deleteAllByCarrito(carrito);
 
-        // Al vaciar el carrito se libera la funcion asociada. Sin esto el carrito
-        // queda pegado a la primera funcion para siempre y agregarItem rechaza
-        // cualquier butaca de otra funcion.
+        // Se libera la funcion tambien, si no queda pegado a la primera para siempre.
         carrito.setFuncion(null);
         carritoRepository.save(carrito);
     }

@@ -20,7 +20,6 @@ import java.util.List;
 @Service
 public class CheckoutServiceIMPL implements CheckoutService {
 
-    // Inyectamos los repositorios con Autowired respetando tu formato
     @Autowired
     private OrdenRepository ordenRepository;
 
@@ -40,36 +39,28 @@ public class CheckoutServiceIMPL implements CheckoutService {
     private ProductoRepository productoRepository;
 
     @Override
-    // rollbackFor = Exception.class: AsientoOcupadoException es checked y puede
-    // lanzarse despues de haber creado la orden, descontado stock y guardado
-    // otras entradas dentro del mismo loop. Sin esto, @Transactional solo
-    // revierte ante RuntimeException y esa excepcion dejaba una orden a medias.
+    // rollbackFor = Exception.class porque AsientoOcupadoException es checked y sin esto no hacia rollback, dejaba la orden a medias.
     @Transactional(rollbackFor = Exception.class)
     public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException,
             AsientoOcupadoException, ProductoNotFoundException {
 
-        // 1. buqueda x id
-        // Si el usuario nunca agrego nada, no hay fila de carrito. Para el
-        // cliente eso es lo mismo que un carrito vacio: 400 con mensaje claro,
-        // no un RuntimeException que sale como 500 con stacktrace.
+        // 1. buqueda x id -Si no hay fila de carrito lo tratamos como carrito vacio
         Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(CarritoVacioException::new);
 
-        // 1.1. los item del carrito x id el metodo echo x nosostros(mente colmena)
+        // los item del carrito
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
 
         if (items.isEmpty()) {
             throw new CarritoVacioException();
         }
 
-        // 1.2. validamos el stock de todos los items de producto ANTES de confirmar nada
-        // 1.2. validamos stock y estado de todos los items de producto ANTES de confirmar nada
+        // chequeamos stock y estado de todos los items antes de confirmar 
         for (ItemCarrito item : items) {
             if (item.getProducto() != null) {
                 Producto producto = item.getProducto();
 
-                // Un producto dado de baja no se vende, aunque haya quedado en un
-                // carrito viejo de antes de la baja (agregarItem ya lo valida al entrar).
+                // Puede haber quedado en el carrito de antes de darse de baja.
                 if (!Boolean.TRUE.equals(producto.getActivo())) {
                     throw new ProductoNotFoundException();
                 }
@@ -85,7 +76,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
         nuevaOrden.setUsuario(carrito.getUsuario());
 
-        nuevaOrden.setFecha(java.time.LocalDateTime.now()); // Fecha actual
+        nuevaOrden.setFecha(java.time.LocalDateTime.now());
         nuevaOrden.setEstado("CONFIRMADA");
         nuevaOrden.setTotal(BigDecimal.ZERO);
 
@@ -98,7 +89,6 @@ public class CheckoutServiceIMPL implements CheckoutService {
         for (ItemCarrito item : items) {
 
             if (item.getProducto() != null) {
-                // Descontamos el stock del producto real al confirmar
                 Producto producto = item.getProducto();
                 producto.setStock(producto.getStock() - item.getCantidad());
                 productoRepository.save(producto);
@@ -120,8 +110,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
             } else if (item.getAsiento() != null) {
                 Funcion funcion = carrito.getFuncion();
                 if (funcion == null) {
-                    // Invariante: agregarItem garantiza que el carrito tenga funcion si hay butacas.
-                    // Si llegamos aca con funcion nula, algo esta corrupto: fallamos y el @Transactional revierte todo.
+                    // No deberia pasar: agregarItem siempre asocia funcion si hay butacas. Si pasa, algo esta mal.
                     throw new IllegalStateException("El carrito tiene butacas pero no tiene funcion asociada");
                 }
 
@@ -131,11 +120,10 @@ public class CheckoutServiceIMPL implements CheckoutService {
                 entrada.setAsiento(item.getAsiento());
                 entrada.setPrecio(funcion.getPrecio_base());
                 try {
-                    // saveAndFlush fuerza el INSERT ahora, para que la violacion del UNIQUE
-                    // salte aca (y no al cerrar la transaccion) y la podamos traducir a un error limpio.
+                    // saveAndFlush para que como no se cumple el UNIQUE salte aca y no al cerrar la transaccion.
                     entradaRepository.saveAndFlush(entrada);
                 } catch (DataIntegrityViolationException e) {
-                    // La butaca ya fue vendida para esta funcion (choca contra el UNIQUE).
+                    // la butaca ya estaba vendida (choca con unique).
                     throw new AsientoOcupadoException();
                 }
 
@@ -154,8 +142,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
         // 6. se borra el los items del carrito
         itemCarritoRepository.deleteAll(items);
 
-        // El carrito vuelve a quedar libre: sin items y sin funcion asociada,
-        // para que el usuario pueda comprar butacas de otra funcion despues.
+        // Se libera la funcion del carrito para poder comprar butacas de otra funcion despues.
         carrito.setFuncion(null);
         carritoRepository.save(carrito);
 

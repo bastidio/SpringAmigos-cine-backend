@@ -7,8 +7,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-// Respuesta de una orden con el detalle de la compra: la entidad Orden sola
-// no alcanza porque no tiene mapeados los ItemOrden ni las Entradas.
+// Orden no tiene mapeados los ItemOrden ni las Entradas, por eso este DTO.
 @Data
 @AllArgsConstructor
 public class OrdenResponse {
