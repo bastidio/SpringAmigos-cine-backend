@@ -6,6 +6,7 @@ import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.CantidadRequest;
 import com.uade.tpo.demo.entity.dto.ItemCarritoRequest;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.CarritoExpiradoException;
 import com.uade.tpo.demo.exceptions.ItemCarritoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
@@ -44,7 +45,7 @@ public class CarritoController {
             @RequestBody ItemCarritoRequest request)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
                    StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
-                   ItemCarritoInvalidoException, CantidadInvalidaException {
+                   ItemCarritoInvalidoException, CantidadInvalidaException, CarritoExpiradoException {
 
         Carrito carritoActualizado = carritoService.agregarItem(
                 usuario.getId(),
@@ -60,7 +61,8 @@ public class CarritoController {
     @DeleteMapping("/items/{itemCarritoId}")
     public ResponseEntity<Carrito> eliminarItem(
             @AuthenticationPrincipal Usuario usuario,
-            @PathVariable Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException {
+            @PathVariable Long itemCarritoId)
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, CarritoExpiradoException {
 
         Carrito carritoActualizado = carritoService.eliminarItem(usuario.getId(), itemCarritoId);
         return ResponseEntity.ok(carritoActualizado);
@@ -72,7 +74,7 @@ public class CarritoController {
             @PathVariable Long itemCarritoId,
             @RequestBody CantidadRequest request)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
-                   SeleccionButacaInvalidaException, CantidadInvalidaException {
+                   SeleccionButacaInvalidaException, CantidadInvalidaException, CarritoExpiradoException {
 
         Carrito carritoActualizado = carritoService.modificarCantidad(usuario.getId(), itemCarritoId, request.getCantidad());
         return ResponseEntity.ok(carritoActualizado);

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.CarritoExpiradoException;
 
 import java.net.URI;
 
@@ -25,7 +26,7 @@ public class CheckoutController {
     @PostMapping
     public ResponseEntity<Orden> procesarCheckout(@AuthenticationPrincipal Usuario usuario)
             throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException,
-                   ProductoNotFoundException {
+                   ProductoNotFoundException, CarritoExpiradoException {
         Orden ordenConfirmada = checkoutService.procesarCheckout(usuario.getId());
         return ResponseEntity.created(URI.create("/api/checkout")).body(ordenConfirmada);
     }

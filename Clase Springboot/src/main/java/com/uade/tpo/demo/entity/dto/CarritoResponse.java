@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.entity.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -14,4 +15,6 @@ public class CarritoResponse {
     private Long funcionId;
     private List<ItemCarritoResponse> items;
     private BigDecimal total;
+    private LocalDateTime expiraEn;
+    private boolean vencido;
 }

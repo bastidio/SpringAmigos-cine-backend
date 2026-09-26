@@ -11,6 +11,7 @@ import com.uade.tpo.demo.entity.ItemCarrito;
 import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.CarritoExpiradoException;
 import com.uade.tpo.demo.exceptions.ItemCarritoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
@@ -52,8 +53,16 @@ public class CarritoServiceIMPL implements CarritoService {
     private FuncionRepository funcionRepository;
 
     @Override
+    @Transactional
     public Carrito obtenerCarritoPorUsuario(Long usuarioId) throws UsuarioNotFoundException {
-        Optional<Carrito> carritoExistente = carritoRepository.findByUsuarioId(usuarioId);
+        Carrito carrito = this.buscarOCrear(usuarioId);
+        this.limpiarSiVencio(carrito);
+        return carrito;
+    }
+
+    // Trae el carrito bloqueado (ver CarritoRepository.findForUpdateByUsuarioId) o lo crea si no existe.
+    private Carrito buscarOCrear(Long usuarioId) throws UsuarioNotFoundException {
+        Optional<Carrito> carritoExistente = carritoRepository.findForUpdateByUsuarioId(usuarioId);
 
         if (carritoExistente.isPresent()) {
             return carritoExistente.get();
@@ -68,14 +77,29 @@ public class CarritoServiceIMPL implements CarritoService {
         }
     }
 
+    // Si el timer ya vencio y el scheduler todavia no paso, se vacia aca. Devuelve true si lo vacio.
+    private boolean limpiarSiVencio(Carrito carrito) {
+        if (carrito.getExpiraEn() != null && carrito.getExpiraEn().isBefore(java.time.LocalDateTime.now())) {
+            this.limpiar(carrito, true);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     @Transactional
     public Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
         throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
                    StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
-                   ItemCarritoInvalidoException, CantidadInvalidaException {
+                   ItemCarritoInvalidoException, CantidadInvalidaException, CarritoExpiradoException {
 
-        Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
+        Carrito carrito = this.buscarOCrear(usuarioId);
+
+        // Si el carrito vencio recien, se vacia y se avisa en vez de agregar en silencio sobre un carrito
+        // que perdio sus items. El siguiente intento ya entra normal (expiraEn quedo en null).
+        if (this.limpiarSiVencio(carrito)) {
+            throw new CarritoExpiradoException();
+        }
 
         // Solo aplica a productos (butaca fuerza cantidad a 1). Sin esto, null o negativo rompian todo.
         if (productoId != null && (cantidad == null || cantidad <= 0)) {
@@ -162,31 +186,42 @@ public class CarritoServiceIMPL implements CarritoService {
             throw new ItemCarritoInvalidoException();
         }
 
+        // Cada vez que se agrega algo, el carrito tiene 5 minutos desde ahora
+        carrito.setExpiraEn(java.time.LocalDateTime.now().plusMinutes(5));
+        carrito.setVencido(false);
+        carritoRepository.save(carrito);
+
         return carrito;
     }
 
     @Override
     @Transactional
-    public Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException {
+    public Carrito eliminarItem(Long usuarioId, Long itemCarritoId)
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, CarritoExpiradoException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
-        ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
-                .orElseThrow(ItemCarritoNotFoundException::new);
+        ItemCarrito item = this.buscarItem(carrito, itemCarritoId);
 
         boolean eraButaca = item.getAsiento() != null;
 
         itemCarritoRepository.delete(item);
 
+        List<ItemCarrito> restantes = itemCarritoRepository.findAllByCarrito(carrito);
+
         // Si era la ultima butaca, liberamos la funcion (si no, queda pegado y agregarItem rechaza otras).
         if (eraButaca) {
-            List<ItemCarrito> restantes = itemCarritoRepository.findAllByCarrito(carrito);
             boolean quedanButacas = restantes.stream().anyMatch(i -> i.getAsiento() != null);
-
             if (!quedanButacas) {
                 carrito.setFuncion(null);
-                carritoRepository.save(carrito);
             }
         }
+
+        
+        if (restantes.isEmpty()) {
+            carrito.setExpiraEn(null);
+        }
+
+        carritoRepository.save(carrito);
 
         return carrito;
     }
@@ -195,7 +230,7 @@ public class CarritoServiceIMPL implements CarritoService {
     @Transactional
     public Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
-                   SeleccionButacaInvalidaException, CantidadInvalidaException {
+                   SeleccionButacaInvalidaException, CantidadInvalidaException, CarritoExpiradoException {
 
         if (nuevaCantidad == null || nuevaCantidad <= 0) {
             throw new CantidadInvalidaException();
@@ -203,8 +238,7 @@ public class CarritoServiceIMPL implements CarritoService {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
 
-        ItemCarrito item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito)
-                .orElseThrow(ItemCarritoNotFoundException::new);
+        ItemCarrito item = this.buscarItem(carrito, itemCarritoId);
 
         // Una butaca es unitaria: no tiene cantidad modificable (ver agregarItem).
         if (item.getAsiento() != null) {
@@ -224,7 +258,9 @@ public class CarritoServiceIMPL implements CarritoService {
         return carrito;
     }
 
-        @Override
+    @Override
+    
+    @Transactional
     public CarritoResponse obtenerCarritoDetallado(Long usuarioId) throws UsuarioNotFoundException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
@@ -279,10 +315,14 @@ public class CarritoServiceIMPL implements CarritoService {
                 carrito.getId(),
                 funcionId,
                 itemsResponse,
-                total.setScale(2, RoundingMode.HALF_UP));
+                total.setScale(2, RoundingMode.HALF_UP),
+                carrito.getExpiraEn(),
+                Boolean.TRUE.equals(carrito.getVencido()));
     }
 
     @Override
+
+    @Transactional
     public BigDecimal calcularTotal(Long usuarioId) throws UsuarioNotFoundException {
 
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
@@ -312,10 +352,47 @@ public class CarritoServiceIMPL implements CarritoService {
     @Transactional
     public void vaciarCarrito(Long usuarioId) throws UsuarioNotFoundException {
         Carrito carrito = this.obtenerCarritoPorUsuario(usuarioId);
+        this.limpiar(carrito, false);
+    }
+
+    @Override
+    @Transactional
+    public void vaciarSiVencido(Long carritoId, java.time.LocalDateTime limite) {
+        Optional<Carrito> encontrado = carritoRepository.findForUpdateById(carritoId);
+        if (encontrado.isEmpty()) {
+            return;
+        }
+        Carrito carrito = encontrado.get();
+
+ 
+        if (carrito.getExpiraEn() == null || !carrito.getExpiraEn().isBefore(limite)) {
+            return;
+        }
+
+        this.limpiar(carrito, true);
+    }
+
+   
+    // Si el item no esta y el carrito se vacio por vencimiento, avisamos eso en vez de "item no encontrado".
+    private ItemCarrito buscarItem(Carrito carrito, Long itemCarritoId)
+            throws ItemCarritoNotFoundException, CarritoExpiradoException {
+        Optional<ItemCarrito> item = itemCarritoRepository.findByIdAndCarrito(itemCarritoId, carrito);
+        if (item.isPresent()) {
+            return item.get();
+        }
+        if (Boolean.TRUE.equals(carrito.getVencido())) {
+            throw new CarritoExpiradoException();
+        }
+        throw new ItemCarritoNotFoundException();
+    }
+
+    private void limpiar(Carrito carrito, boolean porVencimiento) {
         itemCarritoRepository.deleteAllByCarrito(carrito);
 
         // Se libera la funcion tambien, si no queda pegado a la primera para siempre.
         carrito.setFuncion(null);
+        carrito.setExpiraEn(null);
+        carrito.setVencido(porVencimiento);
         carritoRepository.save(carrito);
     }
 }
