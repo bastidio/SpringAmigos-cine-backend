@@ -5,6 +5,7 @@ import com.uade.tpo.demo.entity.Orden;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -18,4 +19,8 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
 
     // Se usa al cancelar: hay que borrarlas para liberar la butaca (las mantiene el UNIQUE).
     List<Entrada> findByOrden(Orden orden);
+
+    // Entradas activas: orden en el estado dado (CONFIRMADA) y funcion que todavia no paso.
+    long countByOrdenUsuarioIdAndOrdenEstadoAndFuncionHorarioAfter(Long usuarioId, String estado,
+            LocalDateTime ahora);
 }
