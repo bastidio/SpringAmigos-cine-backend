@@ -37,6 +37,7 @@ public class AuthenticationService {
                                 .password(passwordEncoder.encode(request.getPassword()))
                                 .nombre(request.getNombre())
                                 .apellido(request.getApellido())
+                                .telefono(request.getTelefono())
                                 // El rol no se acepta desde el request: el registro siempre crea USER.
                                 .rol(Rol.USER)
                                 .build();

@@ -54,6 +54,10 @@ public class Usuario implements UserDetails {
     @Column
     private String apellido;
 
+    // Opcional: puede quedar null si no se cargo en el registro.
+    @Column(nullable = true)
+    private String telefono;
+
     @Enumerated(EnumType.STRING)
     @Column
     private Rol rol;
