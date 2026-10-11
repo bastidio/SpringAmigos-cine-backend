@@ -12,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
+import com.uade.tpo.demo.exceptions.CarritoExpiradoException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -40,19 +42,34 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
     @Override
     // rollbackFor = Exception.class porque AsientoOcupadoException es checked y sin esto no hacia rollback, dejaba la orden a medias.
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, noRollbackFor = CarritoExpiradoException.class)
     public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException,
-            AsientoOcupadoException, ProductoNotFoundException {
+            AsientoOcupadoException, ProductoNotFoundException, CarritoExpiradoException {
 
         // 1. buqueda x id -Si no hay fila de carrito lo tratamos como carrito vacio
-        Carrito carrito = carritoRepository.findByUsuarioId(usuarioId)
+        // Con lock: mientras dura el checkout nadie mas (GET del carrito, scheduler) puede vaciarlo.
+        Carrito carrito = carritoRepository.findForUpdateByUsuarioId(usuarioId)
                 .orElseThrow(CarritoVacioException::new);
 
         // los item del carrito
         List<ItemCarrito> items = itemCarritoRepository.findAllByCarrito(carrito);
 
         if (items.isEmpty()) {
+            // Vacio porque vencio (lo limpio el scheduler o el servicio del carrito): avisamos eso.
+            if (Boolean.TRUE.equals(carrito.getVencido())) {
+                throw new CarritoExpiradoException();
+            }
             throw new CarritoVacioException();
+        }
+
+       
+        if (carrito.getExpiraEn() != null && carrito.getExpiraEn().isBefore(LocalDateTime.now())) {
+            itemCarritoRepository.deleteAllByCarrito(carrito);
+            carrito.setFuncion(null);
+            carrito.setExpiraEn(null);
+            carrito.setVencido(true);
+            carritoRepository.save(carrito);
+            throw new CarritoExpiradoException();
         }
 
         // chequeamos stock y estado de todos los items antes de confirmar 
@@ -144,6 +161,9 @@ public class CheckoutServiceIMPL implements CheckoutService {
 
         // Se libera la funcion del carrito para poder comprar butacas de otra funcion despues.
         carrito.setFuncion(null);
+        // El carrito quedo vacio: se apaga el timer (si no, el front muestra cuenta regresiva sobre nada).
+        carrito.setExpiraEn(null);
+        carrito.setVencido(false);
         carritoRepository.save(carrito);
 
         return nuevaOrden;

@@ -2,6 +2,7 @@ package com.uade.tpo.demo.service;
 import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.CarritoExpiradoException;
 import com.uade.tpo.demo.exceptions.ItemCarritoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.StockInsuficienteException;
@@ -19,13 +20,14 @@ public interface CarritoService {
     Carrito agregarItem(Long usuarioId, Long productoId, Long asientoId, Long funcionId, Integer cantidad)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
                    StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
-                   ItemCarritoInvalidoException, CantidadInvalidaException;
+                   ItemCarritoInvalidoException, CantidadInvalidaException, CarritoExpiradoException;
 
-    Carrito eliminarItem(Long usuarioId, Long itemCarritoId) throws UsuarioNotFoundException, ItemCarritoNotFoundException;
+    Carrito eliminarItem(Long usuarioId, Long itemCarritoId)
+            throws UsuarioNotFoundException, ItemCarritoNotFoundException, CarritoExpiradoException;
 
     Carrito modificarCantidad(Long usuarioId, Long itemCarritoId, Integer nuevaCantidad)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
-                   SeleccionButacaInvalidaException, CantidadInvalidaException;
+                   SeleccionButacaInvalidaException, CantidadInvalidaException, CarritoExpiradoException;
     
     // Carrito con sus items y el total ya calculado, listo para el frontend.
     CarritoResponse obtenerCarritoDetallado(Long usuarioId) throws UsuarioNotFoundException;
@@ -34,4 +36,7 @@ public interface CarritoService {
 
 
     void vaciarCarrito(Long usuarioId) throws UsuarioNotFoundException;
+
+    // Para el scheduler: vacia el carrito solo si sigue vencido antes de "limite" al momento de borrarlo.
+    void vaciarSiVencido(Long carritoId, java.time.LocalDateTime limite);
 }
