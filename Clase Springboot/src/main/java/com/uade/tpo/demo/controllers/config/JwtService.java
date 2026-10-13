@@ -26,8 +26,12 @@ public class JwtService {
     }
 
     private String buildToken(UserDetails userDetails, long expiration) {
+        // Extraemos el rol asignado al usuario (ej. "ADMIN" o "ROLE_ADMIN")
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+
         return Jwts
                 .builder()
+                .claim("role", role) // Agregamos el rol al payload del token
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
