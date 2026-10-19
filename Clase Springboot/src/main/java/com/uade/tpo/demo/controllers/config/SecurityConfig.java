@@ -86,20 +86,5 @@ public class SecurityConfig {
 
                 return http.build();
         }
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration configuration = new CorsConfiguration();
 
-                // Cambiá al puerto 5173 (o agregá ambos por las dudas)
-                configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:5174"));
-
-                // Agregá PATCH para que funcionen las actualizaciones de órdenes y kiosco
-                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-
-                configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", configuration);
-                return source;
-        }
 }
