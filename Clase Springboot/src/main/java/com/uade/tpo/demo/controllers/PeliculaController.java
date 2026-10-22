@@ -2,6 +2,7 @@ package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Pelicula;
 import com.uade.tpo.demo.entity.dto.PeliculaRequest;
+import com.uade.tpo.demo.exceptions.PeliculaNotFoundException;
 import com.uade.tpo.demo.service.PeliculaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +44,27 @@ public class PeliculaController {
                 request.getPoster_url()
         );
         return ResponseEntity.created(URI.create("/peliculas/" + nuevaPelicula.getId())).body(nuevaPelicula);
+    }
+
+    // Solo ADMIN (PUT/DELETE sobre CATALOGO en SecurityConfig).
+    @PutMapping("/{id}")
+    public ResponseEntity<Pelicula> updatePelicula(@PathVariable Long id, @RequestBody PeliculaRequest request)
+            throws PeliculaNotFoundException {
+        Pelicula peliculaActualizada = peliculaService.updatePelicula(
+                id,
+                request.getTitulo(),
+                request.getSinopsis(),
+                request.getDuracion(),
+                request.getClasificacion(),
+                request.getIdioma(),
+                request.getPoster_url()
+        );
+        return ResponseEntity.ok(peliculaActualizada);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePelicula(@PathVariable Long id) throws PeliculaNotFoundException {
+        peliculaService.deletePelicula(id);
+        return ResponseEntity.noContent().build();
     }
 }

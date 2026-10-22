@@ -25,6 +25,7 @@ public class UsuarioServiceIMPL implements UsuarioService {
                 // El front lo muestra en un input: null se devuelve como "".
                 .telefono(usuario.getTelefono() != null ? usuario.getTelefono() : "")
                 .entradasActivas((int) activas)
+                .rol(usuario.getRol() != null ? usuario.getRol().name() : null)
                 .build();
     }
 

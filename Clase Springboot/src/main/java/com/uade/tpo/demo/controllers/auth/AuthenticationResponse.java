@@ -15,4 +15,7 @@ public class AuthenticationResponse {
 
     @JsonProperty("access_token")
     private String accessToken;
+
+    // "ADMIN" o "USER", para que el front no tenga que pedir /users/me despues del login.
+    private String rol;
 }

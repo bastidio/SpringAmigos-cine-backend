@@ -7,8 +7,10 @@ import com.uade.tpo.demo.entity.Producto;
 import com.uade.tpo.demo.entity.Rol;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.EntradaResponse;
+import com.uade.tpo.demo.entity.dto.ItemOrdenDetalleResponse;
 import com.uade.tpo.demo.entity.dto.ItemOrdenResponse;
 import com.uade.tpo.demo.entity.dto.OrdenResponse;
+import com.uade.tpo.demo.entity.dto.UsuarioResumenResponse;
 import com.uade.tpo.demo.exceptions.OrdenAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import com.uade.tpo.demo.repository.EntradaRepository;
@@ -29,6 +31,9 @@ public class OrdenServiceIMPL implements OrdenService {
     // Convencion de estados en MAYUSCULAS, igual que el checkout (CONFIRMADA).
     private static final String ESTADO_CONFIRMADA = "CONFIRMADA";
     private static final String ESTADO_CANCELADA = "CANCELADA";
+    // PENDIENTE y COMPLETADA las usa el panel admin; CONFIRMADA es la que deja el checkout.
+    private static final List<String> ESTADOS_VALIDOS =
+            List.of("PENDIENTE", ESTADO_CONFIRMADA, "COMPLETADA", ESTADO_CANCELADA);
 
     @Autowired
     private OrdenRepository ordenRepository;
@@ -94,6 +99,40 @@ public class OrdenServiceIMPL implements OrdenService {
                     "La orden " + id + " no se puede cancelar porque su estado es " + orden.getEstado());
         }
 
+        return cancelarYRevertir(orden);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OrdenResponse cambiarEstado(Long id, String estado) throws OrdenNotFoundException {
+        if (estado == null || estado.isBlank()) {
+            throw new IllegalArgumentException("El estado es obligatorio");
+        }
+        String nuevoEstado = estado.trim().toUpperCase();
+        if (!ESTADOS_VALIDOS.contains(nuevoEstado)) {
+            throw new IllegalArgumentException("Estado invalido: " + estado
+                    + ". Valores permitidos: " + String.join(", ", ESTADOS_VALIDOS));
+        }
+
+        Orden orden = ordenRepository.findById(id).orElseThrow(OrdenNotFoundException::new);
+
+        if (nuevoEstado.equals(orden.getEstado())) {
+            return buildOrdenResponse(orden);
+        }
+        // Al cancelar ya se liberaron las butacas y se devolvio el stock: reactivarla dejaria todo inconsistente.
+        if (ESTADO_CANCELADA.equals(orden.getEstado())) {
+            throw new IllegalStateException("La orden " + id + " esta cancelada y no se puede cambiar de estado");
+        }
+        if (ESTADO_CANCELADA.equals(nuevoEstado)) {
+            return cancelarYRevertir(orden);
+        }
+
+        orden.setEstado(nuevoEstado);
+        return buildOrdenResponse(ordenRepository.save(orden));
+    }
+
+    // Deshace el checkout: borra entradas (libera butacas), devuelve stock y marca CANCELADA.
+    private OrdenResponse cancelarYRevertir(Orden orden) {
         // Guardamos las butacas antes de borrarlas para poder mostrarlas en la respuesta.
         List<Entrada> entradas = entradaRepository.findByOrden(orden);
         if (!entradas.isEmpty()) {
@@ -101,7 +140,7 @@ public class OrdenServiceIMPL implements OrdenService {
         }
 
         // 2. Devolver el stock de los productos comprados.
-        List<ItemOrden> items = itemOrdenRepository.findByOrdenId(id);
+        List<ItemOrden> items = itemOrdenRepository.findByOrdenId(orden.getId());
         for (ItemOrden item : items) {
             Producto producto = item.getProducto();
             if (producto != null && item.getCantidad() != null) {
@@ -139,8 +178,29 @@ public class OrdenServiceIMPL implements OrdenService {
         List<EntradaResponse> entradasResponse = entradas.stream()
                 .map(this::mapEntradaToResponse)
                 .toList();
+        List<ItemOrdenDetalleResponse> itemsDetalle = items.stream()
+                .map(this::mapItemToDetalle)
+                .toList();
         return new OrdenResponse(orden.getId(), orden.getFecha(), orden.getTotal(), orden.getEstado(),
-                productos, entradasResponse);
+                productos, entradasResponse, mapUsuario(orden.getUsuario()), itemsDetalle);
+    }
+
+    private UsuarioResumenResponse mapUsuario(Usuario usuario) {
+        if (usuario == null) {
+            return null;
+        }
+        // nombre + " " + apellido, igual que el perfil (UsuarioServiceIMPL).
+        String nombre = usuario.getNombre() != null ? usuario.getNombre() : "";
+        String apellido = usuario.getApellido() != null ? usuario.getApellido() : "";
+        return new UsuarioResumenResponse(usuario.getId(), (nombre + " " + apellido).trim());
+    }
+
+    private ItemOrdenDetalleResponse mapItemToDetalle(ItemOrden item) {
+        Producto producto = item.getProducto();
+        ItemOrdenDetalleResponse.ProductoResumen productoResumen = producto != null
+                ? new ItemOrdenDetalleResponse.ProductoResumen(producto.getId(), producto.getNombre())
+                : null;
+        return new ItemOrdenDetalleResponse(item.getCantidad(), item.getPrecio_unitario(), productoResumen);
     }
 
     private ItemOrdenResponse mapItemToResponse(ItemOrden item) {

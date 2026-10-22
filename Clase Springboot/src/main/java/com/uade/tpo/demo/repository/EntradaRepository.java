@@ -20,6 +20,9 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
     // Se usa al cancelar: hay que borrarlas para liberar la butaca (las mantiene el UNIQUE).
     List<Entrada> findByOrden(Orden orden);
 
+    // Entradas vendidas de una funcion (las de ordenes canceladas ya se borran al cancelar).
+    long countByFuncionId(Long funcionId);
+
     // Entradas activas: orden en el estado dado (CONFIRMADA) y funcion que todavia no paso.
     long countByOrdenUsuarioIdAndOrdenEstadoAndFuncionHorarioAfter(Long usuarioId, String estado,
             LocalDateTime ahora);

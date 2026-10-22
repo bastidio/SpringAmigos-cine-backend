@@ -3,6 +3,8 @@ import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Categoria;
 import com.uade.tpo.demo.entity.ImagenProducto;
 import com.uade.tpo.demo.entity.Producto;
+import com.uade.tpo.demo.entity.Rol;
+import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.exceptions.ImagenProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.ValidacionException;
@@ -13,6 +15,7 @@ import com.uade.tpo.demo.repository.ProductoRepository;
 import com.uade.tpo.demo.repository.ProductoSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -35,7 +38,23 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public List<Producto> getProductos(String nombre, Long categoriaId, BigDecimal precioMin, BigDecimal precioMax) {
-        Specification<Producto> spec = Specification.where(ProductoSpecifications.estaActivo());
+        return productoRepository.findAll(buildSpec(nombre, categoriaId, precioMin, precioMax, true));
+    }
+
+    @Override
+    public List<Producto> getProductos(String nombre, Long categoriaId, BigDecimal precioMin, BigDecimal precioMax,
+            boolean incluirInactivos, Usuario solicitante) {
+        // El GET es publico, asi que el permiso para ver inactivos se chequea aca y no en SecurityConfig.
+        // AccessDeniedException la traduce Spring Security: 401 si es anonimo, 403 si no es ADMIN.
+        if (incluirInactivos && !esAdmin(solicitante)) {
+            throw new AccessDeniedException("Solo un administrador puede ver productos inactivos");
+        }
+        return productoRepository.findAll(buildSpec(nombre, categoriaId, precioMin, precioMax, !incluirInactivos));
+    }
+
+    private Specification<Producto> buildSpec(String nombre, Long categoriaId, BigDecimal precioMin, BigDecimal precioMax,
+            boolean soloActivos) {
+        Specification<Producto> spec = Specification.where(soloActivos ? ProductoSpecifications.estaActivo() : null);
 
         if (nombre != null && !nombre.isBlank()) {
             spec = spec.and(ProductoSpecifications.nombreContiene(nombre));
@@ -50,12 +69,21 @@ public class ProductoServiceIMPL implements ProductoService {
             spec = spec.and(ProductoSpecifications.precioMenorOIgualQue(precioMax));
         }
 
-        return productoRepository.findAll(spec);
+        return spec;
     }
 
     @Override
     public Optional<Producto> getProductoById(Long id) {
         return productoRepository.findById(id).filter(p -> Boolean.TRUE.equals(p.getActivo()));
+    }
+
+    @Override
+    public Optional<Producto> getProductoById(Long id, Usuario solicitante) {
+        return esAdmin(solicitante) ? productoRepository.findById(id) : getProductoById(id);
+    }
+
+    private boolean esAdmin(Usuario usuario) {
+        return usuario != null && usuario.getRol() == Rol.ADMIN;
     }
 
     @Override
@@ -72,7 +100,8 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
-    public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes)
+    public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes,
+            Boolean activo, String posterProducto)
             throws CategoriaNotFoundException {
         validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
 
@@ -86,6 +115,9 @@ public class ProductoServiceIMPL implements ProductoService {
         nuevoProducto.setPrecio(precio);
         nuevoProducto.setStock(stock);
         nuevoProducto.setDescuento(descuento);
+        if (activo != null) {
+            nuevoProducto.setActivo(activo);
+        }
 
         List<ImagenProducto> imagenesProducto = new ArrayList<>();
         if (imagenes != null) {
@@ -97,12 +129,14 @@ public class ProductoServiceIMPL implements ProductoService {
             }
         }
         nuevoProducto.setImagenes(imagenesProducto);
+        aplicarPoster(nuevoProducto, posterProducto);
 
         return productoRepository.save(nuevoProducto);
     }
 
     @Override
-    public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento)
+    public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento,
+            Boolean activo, String posterProducto)
             throws ProductoNotFoundException, CategoriaNotFoundException {
         validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
@@ -115,8 +149,43 @@ public class ProductoServiceIMPL implements ProductoService {
         producto.setPrecio(precio);
         producto.setStock(stock);
         producto.setDescuento(descuento);
+        if (activo != null) {
+            producto.setActivo(activo);
+        }
+        aplicarPoster(producto, posterProducto);
 
         return productoRepository.save(producto);
+    }
+
+    @Override
+    public Producto cambiarEstado(Long id, Boolean activo) throws ProductoNotFoundException {
+        if (activo == null) {
+            throw new ValidacionException(Map.of("activo", "el estado activo es obligatorio"));
+        }
+        Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
+        producto.setActivo(activo);
+        return productoRepository.save(producto);
+    }
+
+    // posterProducto es la primera imagen: si no hay imagenes se agrega, si hay se reemplaza la URL de la primera.
+    // Vacio o null = no se toca.
+    private void aplicarPoster(Producto producto, String posterProducto) {
+        if (posterProducto == null || posterProducto.isBlank()) {
+            return;
+        }
+        List<ImagenProducto> imagenes = producto.getImagenes();
+        if (imagenes == null) {
+            imagenes = new ArrayList<>();
+            producto.setImagenes(imagenes);
+        }
+        if (imagenes.isEmpty()) {
+            ImagenProducto poster = new ImagenProducto();
+            poster.setUrl(posterProducto);
+            poster.setProducto(producto);
+            imagenes.add(poster);
+        } else {
+            imagenes.get(0).setUrl(posterProducto);
+        }
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.uade.tpo.demo.controllers;
 import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Producto;
+import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.EstadoProductoRequest;
 import com.uade.tpo.demo.entity.dto.ImagenProductoRequest;
 import com.uade.tpo.demo.entity.dto.ProductoRequest;
 import com.uade.tpo.demo.entity.dto.StockRequest;
@@ -10,6 +12,7 @@ import com.uade.tpo.demo.exceptions.CategoriaNotFoundException;
 import com.uade.tpo.demo.service.ProductoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -28,8 +31,12 @@ public class ProductoController {
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) BigDecimal precioMin,
-            @RequestParam(required = false) BigDecimal precioMax) {
-        return ResponseEntity.ok(productoService.getProductos(nombre, categoriaId, precioMin, precioMax));
+            @RequestParam(required = false) BigDecimal precioMax,
+            // true = activos e inactivos, solo ADMIN (lo valida el service).
+            @RequestParam(defaultValue = "false") boolean incluirInactivos,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(productoService.getProductos(nombre, categoriaId, precioMin, precioMax,
+                incluirInactivos, usuario));
     }
 
     // Solo ADMIN (ver SecurityConfig).
@@ -39,8 +46,8 @@ public class ProductoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Producto> getProductoById(@PathVariable Long id) {
-        Optional<Producto> result = productoService.getProductoById(id);
+    public ResponseEntity<Producto> getProductoById(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        Optional<Producto> result = productoService.getProductoById(id, usuario);
         if (result.isPresent()) {
             return ResponseEntity.ok(result.get());
         }
@@ -57,7 +64,9 @@ public class ProductoController {
                 request.getPrecio(),
                 request.getStock(),
                 request.getDescuento(),
-                request.getImagenes()
+                request.getImagenes(),
+                request.getActivo(),
+                request.getPosterProducto()
         );
         return ResponseEntity.created(URI.create("/productos/" + nuevoProducto.getId())).body(nuevoProducto);
     }
@@ -72,7 +81,9 @@ public class ProductoController {
                 request.getDescripcion(),
                 request.getPrecio(),
                 request.getStock(),
-                request.getDescuento()
+                request.getDescuento(),
+                request.getActivo(),
+                request.getPosterProducto()
         );
         return ResponseEntity.ok(productoActualizado);
     }
@@ -81,6 +92,13 @@ public class ProductoController {
     public ResponseEntity<Producto> actualizarStock(@PathVariable Long id, @RequestBody StockRequest request) throws ProductoNotFoundException {
         Producto productoActualizado = productoService.actualizarStock(id, request.getStock());
         return ResponseEntity.ok(productoActualizado);
+    }
+
+    // Solo ADMIN (PATCH sobre CATALOGO en SecurityConfig). Body { activo: true|false }.
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<Producto> cambiarEstado(@PathVariable Long id, @RequestBody EstadoProductoRequest request)
+            throws ProductoNotFoundException {
+        return ResponseEntity.ok(productoService.cambiarEstado(id, request.getActivo()));
     }
 
     @DeleteMapping("/{id}")
