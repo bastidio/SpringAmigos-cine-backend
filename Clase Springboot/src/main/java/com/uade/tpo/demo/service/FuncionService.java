@@ -2,6 +2,7 @@ package com.uade.tpo.demo.service;
 import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.entity.dto.FuncionResponse;
+import com.uade.tpo.demo.exceptions.FuncionConEntradasException;
 import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
 import com.uade.tpo.demo.exceptions.PeliculaNotFoundException;
 import com.uade.tpo.demo.exceptions.SalaNotFoundException;
@@ -23,4 +24,6 @@ public interface FuncionService {
 
     Funcion updateFuncion(Long id, Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, BigDecimal precioBase)
         throws FuncionNotFoundException, PeliculaNotFoundException, SalaNotFoundException;
+
+    void deleteFuncion(Long id) throws FuncionNotFoundException, FuncionConEntradasException;
 }

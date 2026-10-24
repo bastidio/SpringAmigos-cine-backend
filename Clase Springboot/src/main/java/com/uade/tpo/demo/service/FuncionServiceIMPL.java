@@ -4,17 +4,13 @@ import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.entity.Pelicula;
 import com.uade.tpo.demo.entity.Sala;
 import com.uade.tpo.demo.entity.dto.FuncionResponse;
+import com.uade.tpo.demo.exceptions.*;
 import com.uade.tpo.demo.repository.EntradaRepository;
 import com.uade.tpo.demo.repository.FuncionRepository;
 import com.uade.tpo.demo.repository.PeliculaRepository;
 import com.uade.tpo.demo.repository.SalaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.uade.tpo.demo.exceptions.FuncionNotFoundException;
-import com.uade.tpo.demo.exceptions.PeliculaNotFoundException;
-import com.uade.tpo.demo.exceptions.SalaNotFoundException;
-import com.uade.tpo.demo.exceptions.ValidacionException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -141,5 +137,18 @@ public class FuncionServiceIMPL implements FuncionService {
         if (!errores.isEmpty()) {
             throw new ValidacionException(errores);
         }
+    }
+
+    @Override
+    public void deleteFuncion(Long id) throws FuncionNotFoundException, FuncionConEntradasException {
+        if (!funcionRepository.existsById(id)) {
+            throw new FuncionNotFoundException();
+        }
+
+        if (entradaRepository.countByFuncionId(id) > 0) {
+            throw new FuncionConEntradasException("No se puede eliminar la función porque ya tiene entradas vendidas.");
+        }
+
+        funcionRepository.deleteById(id);
     }
 }

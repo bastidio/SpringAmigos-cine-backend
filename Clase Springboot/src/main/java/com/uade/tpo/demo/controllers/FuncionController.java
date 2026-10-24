@@ -3,9 +3,11 @@ package com.uade.tpo.demo.controllers;
 import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.entity.dto.FuncionRequest;
 import com.uade.tpo.demo.entity.dto.FuncionResponse;
+import com.uade.tpo.demo.exceptions.FuncionConEntradasException;
 import com.uade.tpo.demo.service.FuncionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,4 +72,16 @@ public class FuncionController {
         );
         return ResponseEntity.ok(funcionActualizada);
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteFuncion(@PathVariable Long id) throws FuncionNotFoundException {
+        try {
+            funcionService.deleteFuncion(id);
+            return ResponseEntity.noContent().build();
+        } catch (FuncionConEntradasException e) {
+            // Atrapamos solo el conflicto (409) para mandar el mensaje a React
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+
 }
