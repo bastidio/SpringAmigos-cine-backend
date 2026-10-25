@@ -1,7 +1,9 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Sala;
+import com.uade.tpo.demo.entity.dto.AsientoSalaResponse;
 import com.uade.tpo.demo.entity.dto.SalaRequest;
+import com.uade.tpo.demo.exceptions.SalaNotFoundException;
 import com.uade.tpo.demo.service.SalaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -32,9 +34,23 @@ public class SalaController {
         return ResponseEntity.notFound().build();
     }
 
+    // Publico como el resto de los GET de catalogo (no expone datos de compradores).
+    @GetMapping("/{id}/asientos")
+    public ResponseEntity<List<AsientoSalaResponse>> getAsientosDeSala(@PathVariable Long id)
+            throws SalaNotFoundException {
+        return ResponseEntity.ok(salaService.getAsientosDeSala(id));
+    }
+
     @PostMapping
     public ResponseEntity<Sala> createSala(@RequestBody SalaRequest salaRequest) {
         Sala nuevaSala = salaService.createSala(salaRequest.getNombre(), salaRequest.getCapacidad());
         return ResponseEntity.created(URI.create("/salas/" + nuevaSala.getId())).body(nuevaSala);
+    }
+
+    // Solo ADMIN (PUT sobre CATALOGO en SecurityConfig).
+    @PutMapping("/{id}")
+    public ResponseEntity<Sala> updateSala(@PathVariable Long id, @RequestBody SalaRequest salaRequest)
+            throws SalaNotFoundException {
+        return ResponseEntity.ok(salaService.updateSala(id, salaRequest.getNombre(), salaRequest.getCapacidad()));
     }
 }

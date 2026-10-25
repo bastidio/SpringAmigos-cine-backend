@@ -22,4 +22,7 @@ public interface OrdenService {
 
     OrdenResponse cancelOrden(Long id, Usuario solicitante) throws OrdenAccesoDenegadoException, OrdenNotFoundException;
 
+    // Panel admin (solo ADMIN, ver SecurityConfig). Estado invalido -> 400, orden cancelada -> 409.
+    OrdenResponse cambiarEstado(Long id, String estado) throws OrdenNotFoundException;
+
 }

@@ -5,7 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// Perfil del usuario logueado (GET /users/me). Sin password ni rol.
+// Perfil del usuario logueado (GET /users/me). Sin password.
+// El rol va para que el front sepa si mostrar el panel admin (la autorizacion real sigue en SecurityConfig).
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,4 +18,5 @@ public class PerfilResponse {
     // Puede ser null (sin foto cargada).
     private String fotoPerfil;
     private int entradasActivas;
+    private String rol;
 }

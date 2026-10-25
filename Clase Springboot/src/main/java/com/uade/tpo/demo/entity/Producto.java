@@ -2,6 +2,9 @@ package com.uade.tpo.demo.entity;
 
 import java.math.BigDecimal;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -47,4 +50,11 @@ public class Producto {
 
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ImagenProducto> imagenes;
+
+    // Solo para el JSON: el panel admin lee la imagen principal como "posterProducto".
+    // No es columna (el mapeo es por campo), sale de la primera imagen.
+    @JsonProperty("posterProducto")
+    public String getPosterProducto() {
+        return imagenes != null && !imagenes.isEmpty() ? imagenes.get(0).getUrl() : null;
+    }
 }

@@ -26,6 +26,7 @@ public class UsuarioServiceIMPL implements UsuarioService {
                 .telefono(usuario.getTelefono() != null ? usuario.getTelefono() : "")
                 .fotoPerfil(usuario.getFotoPerfil())
                 .entradasActivas((int) activas)
+                .rol(usuario.getRol() != null ? usuario.getRol().name() : null)
                 .build();
     }
 

@@ -1,6 +1,7 @@
 package com.uade.tpo.demo.controllers;
 
 import com.uade.tpo.demo.entity.Usuario;
+import com.uade.tpo.demo.entity.dto.EstadoOrdenRequest;
 import com.uade.tpo.demo.entity.dto.OrdenResponse;
 import com.uade.tpo.demo.exceptions.OrdenAccesoDenegadoException;
 import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
@@ -47,5 +48,12 @@ public class OrdenController {
             throws OrdenAccesoDenegadoException, OrdenNotFoundException {
         OrdenResponse ordenCancelada = ordenService.cancelOrden(id, usuario);
         return ResponseEntity.ok(ordenCancelada);
+    }
+
+    // PATCH /ordenes/{id}/estado -> Cambiar el estado desde el panel admin (solo ADMIN, ver SecurityConfig)
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<OrdenResponse> cambiarEstado(@PathVariable Long id, @RequestBody EstadoOrdenRequest request)
+            throws OrdenNotFoundException {
+        return ResponseEntity.ok(ordenService.cambiarEstado(id, request.getEstado()));
     }
 }

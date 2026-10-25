@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 // Orden no tiene mapeados los ItemOrden ni las Entradas, por eso este DTO.
+// usuario e items se agregaron para el panel admin; productos/entradas quedan para el cliente.
 @Data
 @AllArgsConstructor
 public class OrdenResponse {
@@ -17,4 +18,6 @@ public class OrdenResponse {
     private String estado;
     private List<ItemOrdenResponse> productos;
     private List<EntradaResponse> entradas;
+    private UsuarioResumenResponse usuario;
+    private List<ItemOrdenDetalleResponse> items;
 }
