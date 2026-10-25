@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.uade.tpo.demo.exceptions.AsientoNotFoundException;
+import com.uade.tpo.demo.exceptions.SalaConFuncionesException;
 import com.uade.tpo.demo.exceptions.SalaNotFoundException;
 
 import java.net.URI;
@@ -43,5 +45,13 @@ public class AsientoController {
                 request.getNumero()
         );
         return ResponseEntity.created(URI.create("/asientos/" + nuevoAsiento.getId())).body(nuevoAsiento);
+    }
+
+    // Solo ADMIN (DELETE sobre CATALOGO en SecurityConfig). 409 si la sala tiene funciones.
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAsiento(@PathVariable Long id)
+            throws AsientoNotFoundException, SalaConFuncionesException {
+        asientoService.deleteAsiento(id);
+        return ResponseEntity.noContent().build();
     }
 }
