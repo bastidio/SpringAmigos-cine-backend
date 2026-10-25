@@ -14,5 +14,7 @@ public class PerfilResponse {
     private String nombre;
     private String email;
     private String telefono;
+    // Puede ser null (sin foto cargada).
+    private String fotoPerfil;
     private int entradasActivas;
 }
