@@ -8,6 +8,7 @@ import com.uade.tpo.demo.repository.PeliculaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +29,17 @@ public class PeliculaServiceIMPL implements PeliculaService {
     }
 
     @Override
+    public List<Pelicula> getPeliculasEnCartelera() {
+        return peliculaRepository.findEnCartelera(LocalDateTime.now());
+    }
+
+    @Override
     public Optional<Pelicula> getPeliculaById(Long id) {
         return peliculaRepository.findById(id);
     }
 
     @Override
-    public Pelicula createPelicula(String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl) {
+    public Pelicula createPelicula(String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl, String bannerUrl) {
         Pelicula nuevaPelicula = new Pelicula();
         nuevaPelicula.setTitulo(titulo);
         nuevaPelicula.setSinopsis(sinopsis);
@@ -41,12 +47,13 @@ public class PeliculaServiceIMPL implements PeliculaService {
         nuevaPelicula.setClasificacion(clasificacion);
         nuevaPelicula.setIdioma(idioma);
         nuevaPelicula.setPoster_url(posterUrl);
+        nuevaPelicula.setBannerUrl(bannerUrl);
 
         return peliculaRepository.save(nuevaPelicula);
     }
 
     @Override
-    public Pelicula updatePelicula(Long id, String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl)
+    public Pelicula updatePelicula(Long id, String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl, String bannerUrl)
             throws PeliculaNotFoundException {
         Map<String, String> errores = new LinkedHashMap<>();
         if (titulo == null || titulo.isBlank()) {
@@ -66,6 +73,10 @@ public class PeliculaServiceIMPL implements PeliculaService {
         pelicula.setClasificacion(clasificacion);
         pelicula.setIdioma(idioma);
         pelicula.setPoster_url(posterUrl);
+        // El panel admin todavia no manda el banner: si no viene, se conserva el que ya tiene.
+        if (bannerUrl != null) {
+            pelicula.setBannerUrl(bannerUrl);
+        }
 
         return peliculaRepository.save(pelicula);
     }

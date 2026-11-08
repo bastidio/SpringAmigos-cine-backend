@@ -8,9 +8,10 @@ import java.util.Optional;
 
 public interface PeliculaService {
     List<Pelicula> getPeliculas();
+    List<Pelicula> getPeliculasEnCartelera();
     Optional<Pelicula> getPeliculaById(Long id);
-    Pelicula createPelicula(String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl);
-    Pelicula updatePelicula(Long id, String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl)
+    Pelicula createPelicula(String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl, String bannerUrl);
+    Pelicula updatePelicula(Long id, String titulo, String sinopsis, Integer duracion, String clasificacion, String idioma, String posterUrl, String bannerUrl)
             throws PeliculaNotFoundException;
 
     // 409 (IllegalStateException) si la pelicula tiene funciones.

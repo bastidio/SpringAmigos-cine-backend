@@ -10,4 +10,5 @@ public class PeliculaRequest {
     private String clasificacion;
     private String idioma;
     private String poster_url;
+    private String bannerUrl;
 }
