@@ -9,7 +9,7 @@ import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import java.util.List;
 
 public interface OrdenService {
-    // usuario que se logueo. se valida que sea dueño u ADMIN, para no leer ocancelar ordenes ajenas.
+    // usuario que se logueo. se valida que sea dueño u ADMIN, para no leer ordenes ajenas.
     Orden getOrdenById(Long id, Usuario solicitante) throws OrdenAccesoDenegadoException, OrdenNotFoundException;
     List<Orden> getOrdenesByUsuarioId(Long usuarioId);
     List<Orden> getAllOrdenes();
@@ -19,10 +19,5 @@ public interface OrdenService {
             throws OrdenAccesoDenegadoException, OrdenNotFoundException;
     List<OrdenResponse> getOrdenesResponseByUsuarioId(Long usuarioId);
     List<OrdenResponse> getAllOrdenesResponse();
-
-    OrdenResponse cancelOrden(Long id, Usuario solicitante) throws OrdenAccesoDenegadoException, OrdenNotFoundException;
-
-    // Panel admin (solo ADMIN, ver SecurityConfig). Estado invalido -> 400, orden cancelada -> 409.
-    OrdenResponse cambiarEstado(Long id, String estado) throws OrdenNotFoundException;
 
 }

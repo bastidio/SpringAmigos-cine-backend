@@ -17,10 +17,10 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
     // El service solo saca los ids de asiento, nunca se serializa la Entrada entera.
     List<Entrada> findByFuncionId(Long funcionId);
 
-    // Se usa al cancelar: hay que borrarlas para liberar la butaca (las mantiene el UNIQUE).
+    // Entradas de una orden (para armar el detalle de la orden).
     List<Entrada> findByOrden(Orden orden);
 
-    // Entradas vendidas de una funcion (las de ordenes canceladas ya se borran al cancelar).
+    // Entradas vendidas de una funcion.
     long countByFuncionId(Long funcionId);
 
     // Entradas activas: orden en el estado dado (CONFIRMADA) y funcion que todavia no paso.

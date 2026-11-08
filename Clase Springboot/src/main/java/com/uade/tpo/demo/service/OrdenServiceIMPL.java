@@ -16,10 +16,8 @@ import com.uade.tpo.demo.exceptions.OrdenNotFoundException;
 import com.uade.tpo.demo.repository.EntradaRepository;
 import com.uade.tpo.demo.repository.ItemOrdenRepository;
 import com.uade.tpo.demo.repository.OrdenRepository;
-import com.uade.tpo.demo.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,13 +25,6 @@ import java.util.List;
 
 @Service
 public class OrdenServiceIMPL implements OrdenService {
-
-    // Convencion de estados en MAYUSCULAS, igual que el checkout (CONFIRMADA).
-    private static final String ESTADO_CONFIRMADA = "CONFIRMADA";
-    private static final String ESTADO_CANCELADA = "CANCELADA";
-    // PENDIENTE y COMPLETADA las usa el panel admin; CONFIRMADA es la que deja el checkout.
-    private static final List<String> ESTADOS_VALIDOS =
-            List.of("PENDIENTE", ESTADO_CONFIRMADA, "COMPLETADA", ESTADO_CANCELADA);
 
     @Autowired
     private OrdenRepository ordenRepository;
@@ -43,9 +34,6 @@ public class OrdenServiceIMPL implements OrdenService {
 
     @Autowired
     private EntradaRepository entradaRepository;
-
-    @Autowired
-    private ProductoRepository productoRepository;
 
     @Override
     public Orden getOrdenById(Long id, Usuario solicitante)
@@ -84,75 +72,6 @@ public class OrdenServiceIMPL implements OrdenService {
         return getAllOrdenes().stream()
                 .map(this::buildOrdenResponse)
                 .toList();
-    }
-
-    // Cancelar hay que deshacer lo del checkout: borrar entradas (libera butacas) y devolver stock.
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public OrdenResponse cancelOrden(Long id, Usuario solicitante)
-            throws OrdenAccesoDenegadoException, OrdenNotFoundException {
-        Orden orden = getOrdenById(id, solicitante);
-
-        // Solo se cancela una orden confirmada, si no una segunda llamada duplicaria el reintegro de stock.
-        if (!ESTADO_CONFIRMADA.equals(orden.getEstado())) {
-            throw new IllegalStateException(
-                    "La orden " + id + " no se puede cancelar porque su estado es " + orden.getEstado());
-        }
-
-        return cancelarYRevertir(orden);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public OrdenResponse cambiarEstado(Long id, String estado) throws OrdenNotFoundException {
-        if (estado == null || estado.isBlank()) {
-            throw new IllegalArgumentException("El estado es obligatorio");
-        }
-        String nuevoEstado = estado.trim().toUpperCase();
-        if (!ESTADOS_VALIDOS.contains(nuevoEstado)) {
-            throw new IllegalArgumentException("Estado invalido: " + estado
-                    + ". Valores permitidos: " + String.join(", ", ESTADOS_VALIDOS));
-        }
-
-        Orden orden = ordenRepository.findById(id).orElseThrow(OrdenNotFoundException::new);
-
-        if (nuevoEstado.equals(orden.getEstado())) {
-            return buildOrdenResponse(orden);
-        }
-        // Al cancelar ya se liberaron las butacas y se devolvio el stock: reactivarla dejaria todo inconsistente.
-        if (ESTADO_CANCELADA.equals(orden.getEstado())) {
-            throw new IllegalStateException("La orden " + id + " esta cancelada y no se puede cambiar de estado");
-        }
-        if (ESTADO_CANCELADA.equals(nuevoEstado)) {
-            return cancelarYRevertir(orden);
-        }
-
-        orden.setEstado(nuevoEstado);
-        return buildOrdenResponse(ordenRepository.save(orden));
-    }
-
-    // Deshace el checkout: borra entradas (libera butacas), devuelve stock y marca CANCELADA.
-    private OrdenResponse cancelarYRevertir(Orden orden) {
-        // Guardamos las butacas antes de borrarlas para poder mostrarlas en la respuesta.
-        List<Entrada> entradas = entradaRepository.findByOrden(orden);
-        if (!entradas.isEmpty()) {
-            entradaRepository.deleteAll(entradas);
-        }
-
-        // 2. Devolver el stock de los productos comprados.
-        List<ItemOrden> items = itemOrdenRepository.findByOrdenId(orden.getId());
-        for (ItemOrden item : items) {
-            Producto producto = item.getProducto();
-            if (producto != null && item.getCantidad() != null) {
-                int stockActual = producto.getStock() != null ? producto.getStock() : 0;
-                producto.setStock(stockActual + item.getCantidad());
-                productoRepository.save(producto);
-            }
-        }
-
-        orden.setEstado(ESTADO_CANCELADA);
-        Orden ordenCancelada = ordenRepository.save(orden);
-        return buildOrdenResponse(ordenCancelada, items, entradas);
     }
 
     private void validarPertenencia(Orden orden, Usuario solicitante) throws OrdenAccesoDenegadoException {

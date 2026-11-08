@@ -69,8 +69,6 @@ public class SecurityConfig {
 
                                                 
                                                 .requestMatchers(HttpMethod.GET, "/ordenes").hasAuthority("ADMIN")
-                                                // Antes de /ordenes/**: si no, cualquier logueado podria cambiar estados.
-                                                .requestMatchers(HttpMethod.PATCH, "/ordenes/*/estado").hasAuthority("ADMIN")
                                                 .requestMatchers("/ordenes/**").authenticated()
 
                                                
