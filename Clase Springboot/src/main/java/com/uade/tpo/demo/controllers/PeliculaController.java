@@ -24,6 +24,11 @@ public class PeliculaController {
         return ResponseEntity.ok(peliculaService.getPeliculas());
     }
 
+    @GetMapping("/cartelera")
+    public ResponseEntity<List<Pelicula>> getPeliculasEnCartelera() {
+        return ResponseEntity.ok(peliculaService.getPeliculasEnCartelera());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Pelicula> getPeliculaById(@PathVariable Long id) {
         Optional<Pelicula> result = peliculaService.getPeliculaById(id);
@@ -41,7 +46,8 @@ public class PeliculaController {
                 request.getDuracion(),
                 request.getClasificacion(),
                 request.getIdioma(),
-                request.getPoster_url()
+                request.getPoster_url(),
+                request.getBannerUrl()
         );
         return ResponseEntity.created(URI.create("/peliculas/" + nuevaPelicula.getId())).body(nuevaPelicula);
     }
@@ -57,7 +63,8 @@ public class PeliculaController {
                 request.getDuracion(),
                 request.getClasificacion(),
                 request.getIdioma(),
-                request.getPoster_url()
+                request.getPoster_url(),
+                request.getBannerUrl()
         );
         return ResponseEntity.ok(peliculaActualizada);
     }

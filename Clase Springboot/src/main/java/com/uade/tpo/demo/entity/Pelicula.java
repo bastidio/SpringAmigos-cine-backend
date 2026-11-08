@@ -33,4 +33,7 @@ public class Pelicula {
 
     @Column
     private String poster_url;
+
+    @Column(name = "banner_url")
+    private String bannerUrl;
 }

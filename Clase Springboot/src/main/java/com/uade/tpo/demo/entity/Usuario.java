@@ -58,6 +58,11 @@ public class Usuario implements UserDetails {
     @Column(nullable = true)
     private String telefono;
 
+    // Ruta relativa al front (ej. "/avatars/lorena.jpg", en public/avatars/) o URL completa https.
+    // Opcional: si es null el front muestra las iniciales.
+    @Column(name = "foto_perfil", length = 500)
+    private String fotoPerfil;
+
     @Enumerated(EnumType.STRING)
     @Column
     private Rol rol;
