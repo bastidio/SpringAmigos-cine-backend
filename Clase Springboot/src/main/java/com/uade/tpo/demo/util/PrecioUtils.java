@@ -14,4 +14,10 @@ public class PrecioUtils {
         BigDecimal factor = BigDecimal.ONE.subtract(desc.divide(BigDecimal.valueOf(100)));
         return precio.multiply(factor).setScale(2, RoundingMode.HALF_UP);
     }
+
+    // Único punto donde se calcula el monto de un código de descuento (porcentaje entero) sobre un subtotal.
+    public static BigDecimal montoDescuento(BigDecimal subtotal, Integer porcentaje) {
+        return subtotal.multiply(BigDecimal.valueOf(porcentaje))
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    }
 }

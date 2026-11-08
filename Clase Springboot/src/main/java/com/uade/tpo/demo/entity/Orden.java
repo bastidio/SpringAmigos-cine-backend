@@ -35,4 +35,18 @@ public class Orden {
 
     @Column
     private String estado;
+
+    // Foto del descuento al momento de la compra (no es FK): el historial no cambia si el codigo se edita o desactiva.
+    // null en las ordenes sin codigo y en las anteriores a esta funcionalidad.
+    @Column
+    private String codigoDescuento;
+
+    @Column
+    private Integer porcentajeDescuento;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal subtotal;
+
+    @Column(precision = 10, scale = 2)
+    private BigDecimal montoDescuento;
 }

@@ -101,7 +101,9 @@ public class OrdenServiceIMPL implements OrdenService {
                 .map(this::mapItemToDetalle)
                 .toList();
         return new OrdenResponse(orden.getId(), orden.getFecha(), orden.getTotal(), orden.getEstado(),
-                productos, entradasResponse, mapUsuario(orden.getUsuario()), itemsDetalle);
+                productos, entradasResponse, mapUsuario(orden.getUsuario()), itemsDetalle,
+                orden.getCodigoDescuento(), orden.getPorcentajeDescuento(), orden.getSubtotal(),
+                orden.getMontoDescuento());
     }
 
     private UsuarioResumenResponse mapUsuario(Usuario usuario) {

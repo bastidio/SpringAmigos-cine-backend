@@ -20,4 +20,8 @@ public class OrdenResponse {
     private List<EntradaResponse> entradas;
     private UsuarioResumenResponse usuario;
     private List<ItemOrdenDetalleResponse> items;
+    private String codigoDescuento;
+    private Integer porcentajeDescuento;
+    private BigDecimal subtotal;
+    private BigDecimal montoDescuento;
 }

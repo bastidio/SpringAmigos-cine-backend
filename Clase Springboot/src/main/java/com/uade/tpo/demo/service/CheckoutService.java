@@ -6,7 +6,9 @@ import com.uade.tpo.demo.exceptions.StockInsuficienteException;
 import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.CarritoExpiradoException;
+import com.uade.tpo.demo.exceptions.CodigoDescuentoInvalidoException;
 
 public interface CheckoutService {
-    Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException, ProductoNotFoundException, CarritoExpiradoException;
+    // codigoDescuento opcional (null o vacio = sin descuento): se vuelve a validar y el total se recalcula aca.
+    Orden procesarCheckout(Long usuarioId, String codigoDescuento) throws CarritoVacioException, StockInsuficienteException, AsientoOcupadoException, ProductoNotFoundException, CarritoExpiradoException, CodigoDescuentoInvalidoException;
 }

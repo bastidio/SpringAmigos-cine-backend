@@ -75,6 +75,9 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, "/entradas/funcion/**").permitAll()
                                                 .requestMatchers("/entradas/**").authenticated()
 
+                                                // gestion de codigos de descuento: todo ADMIN (el GET no es publico)
+                                                .requestMatchers("/descuentos/**").hasAuthority("ADMIN")
+
                                                 .requestMatchers("/api/carritos/**", "/api/checkout/**")
                                                 .authenticated()
 

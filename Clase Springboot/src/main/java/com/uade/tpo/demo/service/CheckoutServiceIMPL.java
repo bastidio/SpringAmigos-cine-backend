@@ -13,6 +13,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import com.uade.tpo.demo.exceptions.AsientoOcupadoException;
 import com.uade.tpo.demo.exceptions.ProductoNotFoundException;
 import com.uade.tpo.demo.exceptions.CarritoExpiradoException;
+import com.uade.tpo.demo.exceptions.CodigoDescuentoInvalidoException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -40,11 +41,14 @@ public class CheckoutServiceIMPL implements CheckoutService {
     @Autowired
     private ProductoRepository productoRepository;
 
+    @Autowired
+    private CodigoDescuentoService codigoDescuentoService;
+
     @Override
     // rollbackFor = Exception.class porque AsientoOcupadoException es checked y sin esto no hacia rollback, dejaba la orden a medias.
     @Transactional(rollbackFor = Exception.class, noRollbackFor = CarritoExpiradoException.class)
-    public Orden procesarCheckout(Long usuarioId) throws CarritoVacioException, StockInsuficienteException,
-            AsientoOcupadoException, ProductoNotFoundException, CarritoExpiradoException {
+    public Orden procesarCheckout(Long usuarioId, String codigoDescuento) throws CarritoVacioException, StockInsuficienteException,
+            AsientoOcupadoException, ProductoNotFoundException, CarritoExpiradoException, CodigoDescuentoInvalidoException {
 
         // 1. buqueda x id -Si no hay fila de carrito lo tratamos como carrito vacio
         // Con lock: mientras dura el checkout nadie mas (GET del carrito, scheduler) puede vaciarlo.
@@ -86,6 +90,13 @@ public class CheckoutServiceIMPL implements CheckoutService {
                     throw new StockInsuficienteException();
                 }
             }
+        }
+
+        // El codigo se vuelve a validar aca (pudo vencer o darse de baja desde que el front lo mostro).
+        // Si ya no sirve se corta antes de tocar stock u ordenes.
+        CodigoDescuento descuento = null;
+        if (codigoDescuento != null && !codigoDescuento.isBlank()) {
+            descuento = codigoDescuentoService.obtenerValido(codigoDescuento);
         }
 
         // 2. Creacion de la orden
@@ -153,7 +164,17 @@ public class CheckoutServiceIMPL implements CheckoutService {
         }
 
         // 5. Actualizacion total
-        nuevaOrden.setTotal(totalCalculado.setScale(2, RoundingMode.HALF_UP));
+        BigDecimal subtotal = totalCalculado.setScale(2, RoundingMode.HALF_UP);
+        if (descuento != null) {
+            // El porcentaje se aplica sobre el total del carrito, despues de los descuentos de cada producto.
+            BigDecimal montoDescuento = PrecioUtils.montoDescuento(subtotal, descuento.getPorcentaje());
+            nuevaOrden.setCodigoDescuento(descuento.getCodigo());
+            nuevaOrden.setPorcentajeDescuento(descuento.getPorcentaje());
+            nuevaOrden.setSubtotal(subtotal);
+            nuevaOrden.setMontoDescuento(montoDescuento);
+            subtotal = subtotal.subtract(montoDescuento);
+        }
+        nuevaOrden.setTotal(subtotal);
         ordenRepository.save(nuevaOrden);
 
         // 6. se borra el los items del carrito

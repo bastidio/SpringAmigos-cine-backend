@@ -53,6 +53,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+    // El codigo de descuento del checkout dejo de ser valido (no existe, inactivo o vencido).
+    @ExceptionHandler(CodigoDescuentoInvalidoException.class)
+    public ResponseEntity<ErrorResponse> handleCodigoDescuentoInvalido(CodigoDescuentoInvalidoException ex) {
+        ErrorResponse body = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Codigo de descuento invalido",
+                "El código de descuento ya no es válido. Quitalo o probá con otro.");
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(CodigoDescuentoNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCodigoDescuentoNotFound(CodigoDescuentoNotFoundException ex) {
+        ErrorResponse body = new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "No encontrado",
+                "El código de descuento solicitado no existe");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(CodigoDescuentoDuplicateException.class)
+    public ResponseEntity<ErrorResponse> handleCodigoDescuentoDuplicate(CodigoDescuentoDuplicateException ex) {
+        ErrorResponse body = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Codigo duplicado",
+                "Ya existe un código con ese nombre. Si está inactivo, reactivalo.");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     // Estado de negocio invalido (ej: cancelar una orden que no esta CONFIRMADA).
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
