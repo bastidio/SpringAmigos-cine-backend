@@ -11,12 +11,14 @@ import com.uade.tpo.demo.exceptions.ValidacionException;
 import com.uade.tpo.demo.exceptions.CategoriaNotFoundException;
 import com.uade.tpo.demo.repository.CategoriaRepository;
 import com.uade.tpo.demo.repository.ImagenProductoRepository;
+import com.uade.tpo.demo.repository.ItemCarritoRepository;
 import com.uade.tpo.demo.repository.ProductoRepository;
 import com.uade.tpo.demo.repository.ProductoSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,6 +37,9 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Autowired
     private ImagenProductoRepository imagenProductoRepository;
+
+    @Autowired
+    private ItemCarritoRepository itemCarritoRepository;
 
     @Override
     public List<Producto> getProductos(String nombre, Long categoriaId, BigDecimal precioMin, BigDecimal precioMax) {
@@ -158,12 +163,16 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
+    @Transactional
     public Producto cambiarEstado(Long id, Boolean activo) throws ProductoNotFoundException {
         if (activo == null) {
             throw new ValidacionException(Map.of("activo", "el estado activo es obligatorio"));
         }
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
         producto.setActivo(activo);
+        if (!activo) {
+            itemCarritoRepository.deleteAllByProducto(producto);
+        }
         return productoRepository.save(producto);
     }
 
@@ -202,9 +211,12 @@ public class ProductoServiceIMPL implements ProductoService {
     }
 
     @Override
+    @Transactional
     public void deleteProducto(Long id) throws ProductoNotFoundException {
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
         producto.setActivo(false);
+        // Un producto inactivo no puede quedar en carritos sin comprar.
+        itemCarritoRepository.deleteAllByProducto(producto);
         productoRepository.save(producto);
     }
 

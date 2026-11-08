@@ -23,6 +23,10 @@ public interface ItemCarritoRepository extends JpaRepository<ItemCarrito, Long> 
     // Para consolidar cantidades cuando se agrega un producto que ya está en el carrito
     Optional<ItemCarrito> findByCarritoAndProducto(Carrito carrito, Producto producto);
 
+    // Saca un producto de todos los carritos (baja logica del producto)
+    @Transactional
+    void deleteAllByProducto(Producto producto);
+
     // Para detectar que una butaca ya esta en el carrito y no duplicarla
     Optional<ItemCarrito> findByCarritoAndAsiento(Carrito carrito, Asiento asiento);
 }
