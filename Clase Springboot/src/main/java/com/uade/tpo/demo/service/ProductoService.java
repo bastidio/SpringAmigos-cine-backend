@@ -28,11 +28,12 @@ public interface ProductoService {
     Producto reactivarProducto(Long id) throws ProductoNotFoundException;
 
     Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes,
-            Boolean activo, String posterProducto)
+            Boolean activo)
             throws CategoriaNotFoundException;
 
+    // imagenes null = no se tocan; si viene, reemplaza la lista completa.
     Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento,
-            Boolean activo, String posterProducto)
+            List<String> imagenes, Boolean activo)
             throws ProductoNotFoundException, CategoriaNotFoundException;
 
     Producto actualizarStock(Long id, Integer nuevoStock) throws ProductoNotFoundException;

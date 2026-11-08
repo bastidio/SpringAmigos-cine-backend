@@ -65,8 +65,7 @@ public class ProductoController {
                 request.getStock(),
                 request.getDescuento(),
                 request.getImagenes(),
-                request.getActivo(),
-                request.getPosterProducto()
+                request.getActivo()
         );
         return ResponseEntity.created(URI.create("/productos/" + nuevoProducto.getId())).body(nuevoProducto);
     }
@@ -82,8 +81,8 @@ public class ProductoController {
                 request.getPrecio(),
                 request.getStock(),
                 request.getDescuento(),
-                request.getActivo(),
-                request.getPosterProducto()
+                request.getImagenes(),
+                request.getActivo()
         );
         return ResponseEntity.ok(productoActualizado);
     }

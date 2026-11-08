@@ -15,6 +15,4 @@ public class ProductoRequest {
     private List<String> imagenes;
     // Opcional: si viene null no se toca (al crear queda en true).
     private Boolean activo;
-    // URL de la imagen principal: se guarda como primera de "imagenes".
-    private String posterProducto;
 }

@@ -106,7 +106,7 @@ public class ProductoServiceIMPL implements ProductoService {
 
     @Override
     public Producto createProducto(Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento, List<String> imagenes,
-            Boolean activo, String posterProducto)
+            Boolean activo)
             throws CategoriaNotFoundException {
         validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
 
@@ -124,24 +124,15 @@ public class ProductoServiceIMPL implements ProductoService {
             nuevoProducto.setActivo(activo);
         }
 
-        List<ImagenProducto> imagenesProducto = new ArrayList<>();
-        if (imagenes != null) {
-            for (String url : imagenes) {
-                ImagenProducto imagenProducto = new ImagenProducto();
-                imagenProducto.setUrl(url);
-                imagenProducto.setProducto(nuevoProducto);
-                imagenesProducto.add(imagenProducto);
-            }
-        }
-        nuevoProducto.setImagenes(imagenesProducto);
-        aplicarPoster(nuevoProducto, posterProducto);
+        nuevoProducto.setImagenes(new ArrayList<>());
+        reemplazarImagenes(nuevoProducto, imagenes);
 
         return productoRepository.save(nuevoProducto);
     }
 
     @Override
     public Producto updateProducto(Long id, Long categoriaId, String nombre, String descripcion, BigDecimal precio, Integer stock, BigDecimal descuento,
-            Boolean activo, String posterProducto)
+            List<String> imagenes, Boolean activo)
             throws ProductoNotFoundException, CategoriaNotFoundException {
         validarDatosProducto(categoriaId, nombre, precio, stock, descuento);
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
@@ -157,7 +148,7 @@ public class ProductoServiceIMPL implements ProductoService {
         if (activo != null) {
             producto.setActivo(activo);
         }
-        aplicarPoster(producto, posterProducto);
+        reemplazarImagenes(producto, imagenes);
 
         return productoRepository.save(producto);
     }
@@ -176,10 +167,10 @@ public class ProductoServiceIMPL implements ProductoService {
         return productoRepository.save(producto);
     }
 
-    // posterProducto es la primera imagen: si no hay imagenes se agrega, si hay se reemplaza la URL de la primera.
-    // Vacio o null = no se toca.
-    private void aplicarPoster(Producto producto, String posterProducto) {
-        if (posterProducto == null || posterProducto.isBlank()) {
+    // Reemplaza la lista completa de imagenes; la primera es la principal. null = no se toca.
+    // Se modifica la coleccion existente (no se reasigna) para que orphanRemoval borre las que sobran.
+    private void reemplazarImagenes(Producto producto, List<String> urls) {
+        if (urls == null) {
             return;
         }
         List<ImagenProducto> imagenes = producto.getImagenes();
@@ -187,13 +178,15 @@ public class ProductoServiceIMPL implements ProductoService {
             imagenes = new ArrayList<>();
             producto.setImagenes(imagenes);
         }
-        if (imagenes.isEmpty()) {
-            ImagenProducto poster = new ImagenProducto();
-            poster.setUrl(posterProducto);
-            poster.setProducto(producto);
-            imagenes.add(poster);
-        } else {
-            imagenes.get(0).setUrl(posterProducto);
+        imagenes.clear();
+        for (String url : urls) {
+            if (url == null || url.isBlank()) {
+                continue;
+            }
+            ImagenProducto imagen = new ImagenProducto();
+            imagen.setUrl(url.trim());
+            imagen.setProducto(producto);
+            imagenes.add(imagen);
         }
     }
 
