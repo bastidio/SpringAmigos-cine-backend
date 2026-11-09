@@ -47,7 +47,7 @@ public class PeliculaServiceIMPL implements PeliculaService {
         nuevaPelicula.setClasificacion(clasificacion);
         nuevaPelicula.setIdioma(idioma);
         nuevaPelicula.setPoster_url(posterUrl);
-        nuevaPelicula.setBannerUrl(bannerUrl);
+        nuevaPelicula.setBannerUrl(bannerUrl == null || bannerUrl.isBlank() ? null : bannerUrl);
 
         return peliculaRepository.save(nuevaPelicula);
     }
@@ -73,10 +73,8 @@ public class PeliculaServiceIMPL implements PeliculaService {
         pelicula.setClasificacion(clasificacion);
         pelicula.setIdioma(idioma);
         pelicula.setPoster_url(posterUrl);
-        // El panel admin todavia no manda el banner: si no viene, se conserva el que ya tiene.
-        if (bannerUrl != null) {
-            pelicula.setBannerUrl(bannerUrl);
-        }
+        // Vacio = sin banner: el detalle usa el poster difuminado de respaldo.
+        pelicula.setBannerUrl(bannerUrl == null || bannerUrl.isBlank() ? null : bannerUrl);
 
         return peliculaRepository.save(pelicula);
     }
