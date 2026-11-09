@@ -17,7 +17,7 @@ public class UsuarioServiceIMPL implements UsuarioService {
     @Override
     public PerfilResponse getPerfil(Usuario usuario) {
         long activas = entradaRepository.countByOrdenUsuarioIdAndOrdenEstadoAndFuncionHorarioAfter(
-                usuario.getId(), "CONFIRMADA", LocalDateTime.now());
+                usuario.getId(), "COMPLETADA", LocalDateTime.now());
 
         return PerfilResponse.builder()
                 .nombre(nombreCompleto(usuario))

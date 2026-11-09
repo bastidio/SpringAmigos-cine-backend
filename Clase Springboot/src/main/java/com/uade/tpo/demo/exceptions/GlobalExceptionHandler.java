@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
-    // Estado de negocio invalido (ej: cancelar una orden que no esta CONFIRMADA).
+    // Estado de negocio invalido (ej: operar sobre un recurso en un estado que no lo permite).
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
         ErrorResponse body = new ErrorResponse(

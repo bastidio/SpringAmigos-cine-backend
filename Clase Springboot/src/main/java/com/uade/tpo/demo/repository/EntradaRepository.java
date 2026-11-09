@@ -23,7 +23,7 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
     // Entradas vendidas de una funcion.
     long countByFuncionId(Long funcionId);
 
-    // Entradas activas: orden en el estado dado (CONFIRMADA) y funcion que todavia no paso.
+    // Entradas activas: orden en el estado dado (COMPLETADA) y funcion que todavia no paso.
     long countByOrdenUsuarioIdAndOrdenEstadoAndFuncionHorarioAfter(Long usuarioId, String estado,
             LocalDateTime ahora);
 }

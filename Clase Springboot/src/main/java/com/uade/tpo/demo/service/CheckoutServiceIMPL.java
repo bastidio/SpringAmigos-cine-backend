@@ -105,7 +105,7 @@ public class CheckoutServiceIMPL implements CheckoutService {
         nuevaOrden.setUsuario(carrito.getUsuario());
 
         nuevaOrden.setFecha(java.time.LocalDateTime.now());
-        nuevaOrden.setEstado("CONFIRMADA");
+        nuevaOrden.setEstado("COMPLETADA");
         nuevaOrden.setTotal(BigDecimal.ZERO);
 
 
