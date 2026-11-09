@@ -18,6 +18,9 @@ public interface FuncionService {
     // fecha null = todas. Incluye entradasVendidas para el panel admin.
     List<FuncionResponse> getFuncionesResponse(LocalDate fecha);
 
+    // Misma forma que devuelve getFuncionesResponse, para responder un POST/PUT sin que el cliente vuelva a pedir la lista.
+    FuncionResponse toResponse(Funcion funcion);
+
     Optional<Funcion> getFuncionById(Long id);
     Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, BigDecimal precioBase)
         throws PeliculaNotFoundException, SalaNotFoundException;

@@ -1,6 +1,5 @@
 package com.uade.tpo.demo.controllers;
 import java.math.BigDecimal;
-import com.uade.tpo.demo.entity.Carrito;
 import com.uade.tpo.demo.entity.dto.CarritoResponse;
 import com.uade.tpo.demo.entity.Usuario;
 import com.uade.tpo.demo.entity.dto.CantidadRequest;
@@ -40,14 +39,14 @@ public class CarritoController {
     }
 
     @PostMapping("/items")
-    public ResponseEntity<Carrito> agregarItem(
+    public ResponseEntity<CarritoResponse> agregarItem(
             @AuthenticationPrincipal Usuario usuario,
             @RequestBody ItemCarritoRequest request)
             throws UsuarioNotFoundException, ProductoNotFoundException, AsientoNotFoundException,
                    StockInsuficienteException, FuncionNotFoundException, SeleccionButacaInvalidaException,
                    ItemCarritoInvalidoException, CantidadInvalidaException, CarritoExpiradoException {
 
-        Carrito carritoActualizado = carritoService.agregarItem(
+        carritoService.agregarItem(
                 usuario.getId(),
                 request.getProductoId(),
                 request.getAsientoId(),
@@ -55,29 +54,29 @@ public class CarritoController {
                 request.getCantidad()
         );
 
-        return ResponseEntity.created(URI.create("/api/carritos")).body(carritoActualizado);
+        return ResponseEntity.created(URI.create("/api/carritos")).body(carritoService.obtenerCarritoDetallado(usuario.getId()));
     }
 
     @DeleteMapping("/items/{itemCarritoId}")
-    public ResponseEntity<Carrito> eliminarItem(
+    public ResponseEntity<CarritoResponse> eliminarItem(
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable Long itemCarritoId)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, CarritoExpiradoException {
 
-        Carrito carritoActualizado = carritoService.eliminarItem(usuario.getId(), itemCarritoId);
-        return ResponseEntity.ok(carritoActualizado);
+        carritoService.eliminarItem(usuario.getId(), itemCarritoId);
+        return ResponseEntity.ok(carritoService.obtenerCarritoDetallado(usuario.getId()));
     }
 
     @PutMapping("/items/{itemCarritoId}")
-    public ResponseEntity<Carrito> modificarCantidad(
+    public ResponseEntity<CarritoResponse> modificarCantidad(
             @AuthenticationPrincipal Usuario usuario,
             @PathVariable Long itemCarritoId,
             @RequestBody CantidadRequest request)
             throws UsuarioNotFoundException, ItemCarritoNotFoundException, StockInsuficienteException,
                    SeleccionButacaInvalidaException, CantidadInvalidaException, CarritoExpiradoException {
 
-        Carrito carritoActualizado = carritoService.modificarCantidad(usuario.getId(), itemCarritoId, request.getCantidad());
-        return ResponseEntity.ok(carritoActualizado);
+        carritoService.modificarCantidad(usuario.getId(), itemCarritoId, request.getCantidad());
+        return ResponseEntity.ok(carritoService.obtenerCarritoDetallado(usuario.getId()));
     }
 
     @DeleteMapping

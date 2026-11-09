@@ -44,7 +44,7 @@ public class FuncionController {
     }
 
     @PostMapping
-    public ResponseEntity<Funcion> createFuncion(@RequestBody FuncionRequest request)
+    public ResponseEntity<FuncionResponse> createFuncion(@RequestBody FuncionRequest request)
             throws PeliculaNotFoundException, SalaNotFoundException {
         Funcion nuevaFuncion = funcionService.createFuncion(
                 request.getPeliculaId(),
@@ -54,12 +54,12 @@ public class FuncionController {
                 request.getFormato(),
                 request.getPrecio_base()
         );
-        return ResponseEntity.created(URI.create("/funciones/" + nuevaFuncion.getId())).body(nuevaFuncion);
+        return ResponseEntity.created(URI.create("/funciones/" + nuevaFuncion.getId())).body(funcionService.toResponse(nuevaFuncion));
     }
 
     // Solo ADMIN (PUT sobre CATALOGO en SecurityConfig).
     @PutMapping("/{id}")
-    public ResponseEntity<Funcion> updateFuncion(@PathVariable Long id, @RequestBody FuncionRequest request)
+    public ResponseEntity<FuncionResponse> updateFuncion(@PathVariable Long id, @RequestBody FuncionRequest request)
             throws FuncionNotFoundException, PeliculaNotFoundException, SalaNotFoundException {
         Funcion funcionActualizada = funcionService.updateFuncion(
                 id,
@@ -70,7 +70,7 @@ public class FuncionController {
                 request.getFormato(),
                 request.getPrecio_base()
         );
-        return ResponseEntity.ok(funcionActualizada);
+        return ResponseEntity.ok(funcionService.toResponse(funcionActualizada));
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFuncion(@PathVariable Long id) throws FuncionNotFoundException {

@@ -103,6 +103,11 @@ public class FuncionServiceIMPL implements FuncionService {
         return funcionRepository.save(funcion);
     }
 
+    @Override
+    public FuncionResponse toResponse(Funcion funcion) {
+        return mapToResponse(funcion);
+    }
+
     private FuncionResponse mapToResponse(Funcion funcion) {
         return new FuncionResponse(
                 funcion.getId(),
