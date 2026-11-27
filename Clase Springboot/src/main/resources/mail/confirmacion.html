@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="margin:0;padding:0;background-color:#0b0810;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0b0810;padding:32px 12px;font-family:Helvetica, Arial, sans-serif;color:#ede6da;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#16111d;border:1px solid #2a2138;border-radius:16px;">
+
+                    <!-- Encabezado -->
+                    <tr>
+                        <td align="center" style="padding:36px 32px 8px;">
+                            <img src="cid:logo" alt="Lumière Cine" width="200" style="display:block;width:200px;height:auto;border:0;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding:16px 32px 0;">
+                            <p style="margin:0;font-size:12px;letter-spacing:3px;color:#d9b76a;">COMPRA CONFIRMADA</p>
+                            <h1 style="margin:12px 0 8px;font-family:Georgia, 'Times New Roman', serif;font-size:28px;color:#ede6da;">¡Gracias por tu compra!</h1>
+                            <p style="margin:0;font-size:14px;color:#a89cb0;">Orden <strong style="color:#ede6da;">#{{numeroOrden}}</strong> · {{fecha}}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Separador -->
+                    <tr>
+                        <td style="padding:24px 32px;">
+                            <div style="height:1px;background-color:#b8913f;opacity:0.4;font-size:0;line-height:0;">&nbsp;</div>
+                        </td>
+                    </tr>
+
+                    {{entradas}}
+
+                    {{kiosco}}
+
+                    <!-- Totales -->
+                    <tr>
+                        <td style="padding:0 32px 32px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+                                <tr>
+                                    <td style="padding:4px 0 8px;color:#a89cb0;">Subtotal</td>
+                                    <td align="right" style="padding:4px 0 8px;color:#ede6da;">{{subtotal}}</td>
+                                </tr>
+                                {{descuento}}
+                                <tr>
+                                    <td style="padding:12px 0 0;border-top:1px solid #2a2138;font-size:16px;color:#ede6da;"><strong>Total</strong></td>
+                                    <td align="right" style="padding:12px 0 0;border-top:1px solid #2a2138;font-family:Georgia, 'Times New Roman', serif;font-size:22px;font-weight:bold;color:#d9b76a;">{{total}}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <p style="margin:24px 0 0;font-size:12px;color:#a89cb0;">Presentá el QR de cada entrada al ingresar a la sala.</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

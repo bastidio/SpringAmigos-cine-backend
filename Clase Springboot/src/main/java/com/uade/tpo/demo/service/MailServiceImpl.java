@@ -26,7 +26,9 @@ import org.springframework.web.util.HtmlUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -35,27 +37,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class MailServiceImpl implements MailService {
 
     private static final Logger log = LoggerFactory.getLogger(MailServiceImpl.class);
 
-    // Paleta de Lumière (la misma del front). Los estilos van en linea porque los clientes de mail no leen CSS externo.
-    private static final String FONDO = "#0b0810";
-    private static final String SUPERFICIE = "#16111d";
-    private static final String ELEVADO = "#211830";
-    private static final String BORDE = "#2a2138";
-    private static final String DORADO = "#b8913f";
-    private static final String DORADO_TEXTO = "#d9b76a";
-    private static final String TEXTO = "#ede6da";
-    private static final String TEXTO_SUAVE = "#a89cb0";
-    private static final String FUENTE = "Helvetica, Arial, sans-serif";
-    private static final String FUENTE_TITULOS = "Georgia, 'Times New Roman', serif";
-
     private static final DateTimeFormatter FORMATO_FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm");
+    private static final Pattern MARCADOR = Pattern.compile("\\{\\{(\\w+)\\}\\}");
 
     @Autowired
     private JavaMailSender mailSender;
@@ -121,117 +115,80 @@ public class MailServiceImpl implements MailService {
         return salida.toByteArray();
     }
 
-    private String armarHtml(Orden orden, List<Entrada> entradas, List<ItemOrden> items) {
-        StringBuilder html = new StringBuilder();
-        html.append("<!DOCTYPE html><html lang=\"es\"><head><meta charset=\"UTF-8\"></head>")
-                .append("<body style=\"margin:0;padding:0;background-color:").append(FONDO).append(";\">")
-                .append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background-color:")
-                .append(FONDO).append(";padding:32px 12px;font-family:").append(FUENTE).append(";color:").append(TEXTO).append(";\">")
-                .append("<tr><td align=\"center\">")
-                .append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;background-color:")
-                .append(SUPERFICIE).append(";border:1px solid ").append(BORDE).append(";border-radius:16px;\">");
-
-        // Encabezado
-        html.append("<tr><td align=\"center\" style=\"padding:36px 32px 8px;\">")
-                .append("<img src=\"cid:logo\" alt=\"Lumière Cine\" width=\"200\" style=\"display:block;width:200px;height:auto;border:0;\">")
-                .append("</td></tr>")
-                .append("<tr><td align=\"center\" style=\"padding:16px 32px 0;\">")
-                .append("<p style=\"margin:0;font-size:12px;letter-spacing:3px;color:").append(DORADO_TEXTO).append(";\">COMPRA CONFIRMADA</p>")
-                .append("<h1 style=\"margin:12px 0 8px;font-family:").append(FUENTE_TITULOS).append(";font-size:28px;color:").append(TEXTO)
-                .append(";\">¡Gracias por tu compra!</h1>")
-                .append("<p style=\"margin:0;font-size:14px;color:").append(TEXTO_SUAVE).append(";\">Orden <strong style=\"color:")
-                .append(TEXTO).append(";\">#").append(orden.getId()).append("</strong> · ")
-                .append(orden.getFecha().format(FORMATO_FECHA_HORA)).append("</p>")
-                .append("</td></tr>");
-
-        html.append(separador());
-
-        // Entradas
-        if (!entradas.isEmpty()) {
-            Funcion funcion = entradas.get(0).getFuncion();
-            html.append("<tr><td style=\"padding:0 32px;\">")
-                    .append("<p style=\"margin:0 0 4px;font-size:12px;letter-spacing:2px;color:").append(DORADO_TEXTO).append(";\">PELÍCULA</p>")
-                    .append("<h2 style=\"margin:0 0 16px;font-family:").append(FUENTE_TITULOS).append(";font-size:22px;color:").append(TEXTO).append(";\">")
-                    .append(HtmlUtils.htmlEscape(funcion.getPelicula().getTitulo())).append("</h2>")
-                    .append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:14px;\"><tr>")
-                    .append(dato("Día", funcion.getHorario().format(FORMATO_FECHA)))
-                    .append(dato("Hora", funcion.getHorario().format(FORMATO_HORA) + " hs"))
-                    .append(dato("Sala", HtmlUtils.htmlEscape(funcion.getSala().getNombre())))
-                    .append("</tr></table>")
-                    .append("<p style=\"margin:24px 0 12px;font-size:12px;letter-spacing:2px;color:").append(DORADO_TEXTO)
-                    .append(";\">TUS ENTRADAS</p>");
-
-            for (Entrada entrada : entradas) {
-                String butaca = String.valueOf((char) (64 + entrada.getAsiento().getFila())) + entrada.getAsiento().getNumero();
-                html.append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:12px;background-color:")
-                        .append(ELEVADO).append(";border:1px solid ").append(BORDE).append(";border-radius:12px;\"><tr>")
-                        .append("<td style=\"padding:16px 20px;\">")
-                        .append("<p style=\"margin:0;font-size:12px;color:").append(TEXTO_SUAVE).append(";\">Butaca</p>")
-                        .append("<p style=\"margin:4px 0 0;font-family:").append(FUENTE_TITULOS).append(";font-size:26px;font-weight:bold;color:")
-                        .append(DORADO_TEXTO).append(";\">").append(butaca).append("</p>")
-                        .append("<p style=\"margin:4px 0 0;font-size:12px;color:").append(TEXTO_SUAVE).append(";\">Entrada #")
-                        .append(entrada.getId()).append(" · ").append(moneda(entrada.getPrecio())).append("</p>")
-                        .append("</td>")
-                        .append("<td align=\"right\" style=\"padding:12px 16px;\">")
-                        .append("<img src=\"cid:qr").append(entrada.getId()).append("\" alt=\"QR de la entrada ").append(butaca)
-                        .append("\" width=\"110\" height=\"110\" style=\"display:block;border:0;border-radius:8px;background-color:#ffffff;\">")
-                        .append("</td></tr></table>");
-            }
-            html.append("</td></tr>").append(separador());
-        }
-
-        // Kiosco
-        if (!items.isEmpty()) {
-            html.append("<tr><td style=\"padding:0 32px;\">")
-                    .append("<p style=\"margin:0 0 12px;font-size:12px;letter-spacing:2px;color:").append(DORADO_TEXTO).append(";\">KIOSCO</p>")
-                    .append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:14px;\">");
-            for (ItemOrden item : items) {
-                BigDecimal totalItem = item.getPrecio_unitario().multiply(BigDecimal.valueOf(item.getCantidad()));
-                html.append("<tr><td style=\"padding:6px 0;color:").append(TEXTO).append(";\">")
-                        .append(item.getCantidad()).append(" × ").append(HtmlUtils.htmlEscape(item.getProducto().getNombre()))
-                        .append("</td><td align=\"right\" style=\"padding:6px 0;color:").append(TEXTO).append(";\">")
-                        .append(moneda(totalItem)).append("</td></tr>");
-            }
-            html.append("</table></td></tr>").append(separador());
-        }
-
-        // Totales (subtotal y descuento solo se guardan cuando hubo codigo de descuento)
+    private String armarHtml(Orden orden, List<Entrada> entradas, List<ItemOrden> items) throws IOException {
+        // subtotal y montoDescuento solo se guardan cuando hubo codigo de descuento
         BigDecimal subtotal = orden.getSubtotal() != null ? orden.getSubtotal() : orden.getTotal();
-        html.append("<tr><td style=\"padding:0 32px 32px;\">")
-                .append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:14px;\">")
-                .append(filaTotal("Subtotal", moneda(subtotal)));
-        if (orden.getMontoDescuento() != null) {
-            html.append(filaTotal("Descuento " + HtmlUtils.htmlEscape(orden.getCodigoDescuento())
-                    + " (" + orden.getPorcentajeDescuento() + "%)", "- " + moneda(orden.getMontoDescuento())));
+
+        return completar(leerPlantilla("confirmacion.html"), Map.of(
+                "numeroOrden", orden.getId(),
+                "fecha", orden.getFecha().format(FORMATO_FECHA_HORA),
+                "entradas", armarSeccionEntradas(entradas),
+                "kiosco", armarSeccionKiosco(items),
+                "subtotal", moneda(subtotal),
+                "descuento", armarDescuento(orden),
+                "total", moneda(orden.getTotal())));
+    }
+
+    private String armarSeccionEntradas(List<Entrada> entradas) throws IOException {
+        if (entradas.isEmpty()) {
+            return "";
         }
-        html.append("<tr><td style=\"padding:12px 0 0;border-top:1px solid ").append(BORDE).append(";font-size:16px;color:").append(TEXTO)
-                .append(";\"><strong>Total</strong></td>")
-                .append("<td align=\"right\" style=\"padding:12px 0 0;border-top:1px solid ").append(BORDE)
-                .append(";font-family:").append(FUENTE_TITULOS).append(";font-size:22px;font-weight:bold;color:").append(DORADO_TEXTO).append(";\">")
-                .append(moneda(orden.getTotal())).append("</td></tr>")
-                .append("</table></td></tr>");
+        String plantilla = leerPlantilla("entrada.html");
+        StringBuilder lista = new StringBuilder();
+        for (Entrada entrada : entradas) {
+            String butaca = String.valueOf((char) (64 + entrada.getAsiento().getFila())) + entrada.getAsiento().getNumero();
+            lista.append(completar(plantilla, Map.of(
+                    "butaca", butaca,
+                    "numeroEntrada", entrada.getId(),
+                    "precio", moneda(entrada.getPrecio()))));
+        }
 
-        html.append("</table>")
-                .append("<p style=\"margin:24px 0 0;font-size:12px;color:").append(TEXTO_SUAVE)
-                .append(";\">Presentá el QR de cada entrada al ingresar a la sala.</p>")
-                .append("</td></tr></table></body></html>");
-        return html.toString();
+        Funcion funcion = entradas.get(0).getFuncion();
+        return completar(leerPlantilla("seccion-entradas.html"), Map.of(
+                "pelicula", HtmlUtils.htmlEscape(funcion.getPelicula().getTitulo()),
+                "dia", funcion.getHorario().format(FORMATO_FECHA),
+                "hora", funcion.getHorario().format(FORMATO_HORA),
+                "sala", HtmlUtils.htmlEscape(funcion.getSala().getNombre()),
+                "listaEntradas", lista));
     }
 
-    private String separador() {
-        return "<tr><td style=\"padding:24px 32px;\"><div style=\"height:1px;background-color:" + DORADO
-                + ";opacity:0.4;font-size:0;line-height:0;\">&nbsp;</div></td></tr>";
+    private String armarSeccionKiosco(List<ItemOrden> items) throws IOException {
+        if (items.isEmpty()) {
+            return "";
+        }
+        String plantilla = leerPlantilla("producto.html");
+        StringBuilder productos = new StringBuilder();
+        for (ItemOrden item : items) {
+            BigDecimal importe = item.getPrecio_unitario().multiply(BigDecimal.valueOf(item.getCantidad()));
+            productos.append(completar(plantilla, Map.of(
+                    "cantidad", item.getCantidad(),
+                    "nombre", HtmlUtils.htmlEscape(item.getProducto().getNombre()),
+                    "importe", moneda(importe))));
+        }
+        return completar(leerPlantilla("seccion-kiosco.html"), Map.of("productos", productos));
     }
 
-    private String dato(String rotulo, String valor) {
-        return "<td style=\"padding:0 8px 0 0;vertical-align:top;\">"
-                + "<p style=\"margin:0;font-size:12px;color:" + TEXTO_SUAVE + ";\">" + rotulo + "</p>"
-                + "<p style=\"margin:4px 0 0;font-size:15px;font-weight:bold;color:" + TEXTO + ";\">" + valor + "</p></td>";
+    private String armarDescuento(Orden orden) throws IOException {
+        if (orden.getMontoDescuento() == null) {
+            return "";
+        }
+        return completar(leerPlantilla("descuento.html"), Map.of(
+                "codigo", HtmlUtils.htmlEscape(orden.getCodigoDescuento()),
+                "porcentaje", orden.getPorcentajeDescuento(),
+                "monto", moneda(orden.getMontoDescuento())));
     }
 
-    private String filaTotal(String rotulo, String valor) {
-        return "<tr><td style=\"padding:4px 0 8px;color:" + TEXTO_SUAVE + ";\">" + rotulo + "</td>"
-                + "<td align=\"right\" style=\"padding:4px 0 8px;color:" + TEXTO + ";\">" + valor + "</td></tr>";
+    private String leerPlantilla(String nombre) throws IOException {
+        try (InputStream entrada = new ClassPathResource("mail/" + nombre).getInputStream()) {
+            return new String(entrada.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private String completar(String plantilla, Map<String, ?> datos) {
+        return MARCADOR.matcher(plantilla).replaceAll(marcador -> {
+            Object valor = Objects.requireNonNull(datos.get(marcador.group(1)), "Marcador sin dato: " + marcador.group());
+            return Matcher.quoteReplacement(valor.toString());
+        });
     }
 
     private String moneda(BigDecimal monto) {
