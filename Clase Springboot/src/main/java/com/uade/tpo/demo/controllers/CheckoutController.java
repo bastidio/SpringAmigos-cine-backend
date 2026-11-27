@@ -11,6 +11,7 @@ import com.uade.tpo.demo.exceptions.UsuarioNotFoundException;
 import com.uade.tpo.demo.service.CarritoService;
 import com.uade.tpo.demo.service.CheckoutService;
 import com.uade.tpo.demo.service.CodigoDescuentoService;
+import com.uade.tpo.demo.service.MailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,6 +36,9 @@ public class CheckoutController {
     @Autowired
     private CarritoService carritoService;
 
+    @Autowired
+    private MailService mailService;
+
     // Body opcional: solo el codigo. El porcentaje y el total los recalcula el service.
     @PostMapping
     public ResponseEntity<Orden> procesarCheckout(@AuthenticationPrincipal Usuario usuario,
@@ -43,6 +47,10 @@ public class CheckoutController {
                    ProductoNotFoundException, CarritoExpiradoException, CodigoDescuentoInvalidoException {
         String codigo = request != null ? request.getCodigoDescuento() : null;
         Orden ordenConfirmada = checkoutService.procesarCheckout(usuario.getId(), codigo);
+
+        // La transaccion del checkout ya termino y el mail se manda aparte: si falla, la compra queda igual.
+        mailService.enviarConfirmacionCompra(ordenConfirmada);
+
         return ResponseEntity.created(URI.create("/api/checkout")).body(ordenConfirmada);
     }
 
