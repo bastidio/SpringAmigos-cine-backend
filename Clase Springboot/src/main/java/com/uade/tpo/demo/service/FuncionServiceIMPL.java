@@ -3,9 +3,14 @@ import java.math.BigDecimal;
 import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.entity.Pelicula;
 import com.uade.tpo.demo.entity.Sala;
+import com.uade.tpo.demo.entity.Favorito;
 import com.uade.tpo.demo.entity.dto.FuncionResponse;
+import com.uade.tpo.demo.entity.dto.NuevaFuncionMail;
 import com.uade.tpo.demo.exceptions.*;
 import com.uade.tpo.demo.repository.EntradaRepository;
+import com.uade.tpo.demo.repository.FavoritoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.uade.tpo.demo.repository.FuncionRepository;
 import com.uade.tpo.demo.repository.PeliculaRepository;
 import com.uade.tpo.demo.repository.SalaRepository;
@@ -37,6 +42,14 @@ public class FuncionServiceIMPL implements FuncionService {
 
     @Autowired
     private EntradaRepository entradaRepository;
+
+    @Autowired
+    private FavoritoRepository favoritoRepository;
+
+    @Autowired
+    private MailService mailService;
+
+    private static final Logger log = LoggerFactory.getLogger(FuncionServiceIMPL.class);
 
     @Override
     public List<Funcion> getFunciones() {
@@ -78,7 +91,25 @@ public class FuncionServiceIMPL implements FuncionService {
         nuevaFuncion.setFormato(formato);
         nuevaFuncion.setPrecio_base(precioBase);
 
-        return funcionRepository.save(nuevaFuncion);
+        Funcion funcionGuardada = funcionRepository.save(nuevaFuncion);
+        if (funcionGuardada.getHorario().isAfter(LocalDateTime.now())) {
+            avisarFavoritos(funcionGuardada);
+        }
+        return funcionGuardada;
+    }
+
+    private void avisarFavoritos(Funcion funcion) {
+        try {
+            Pelicula pelicula = funcion.getPelicula();
+            for (Favorito favorito : favoritoRepository.findByPeliculaId(pelicula.getId())) {
+                mailService.enviarNuevaFuncionFavorita(new NuevaFuncionMail(
+                        favorito.getUsuario().getEmail(),
+                        pelicula.getTitulo(),
+                        pelicula.getId()));
+            }
+        } catch (Exception e) {
+            log.error("No se pudo avisar de la función {} a los usuarios con la película en favoritos.", funcion.getId(), e);
+        }
     }
 
     @Override

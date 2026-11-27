@@ -9,6 +9,7 @@ import com.uade.tpo.demo.entity.Entrada;
 import com.uade.tpo.demo.entity.Funcion;
 import com.uade.tpo.demo.entity.ItemOrden;
 import com.uade.tpo.demo.entity.Orden;
+import com.uade.tpo.demo.entity.dto.NuevaFuncionMail;
 import com.uade.tpo.demo.repository.EntradaRepository;
 import com.uade.tpo.demo.repository.ItemOrdenRepository;
 import jakarta.mail.internet.MimeMessage;
@@ -63,6 +64,9 @@ public class MailServiceImpl implements MailService {
     @Value("${spring.mail.username:}")
     private String remitente;
 
+    @Value("${app.front.url:http://localhost:5173}")
+    private String urlFront;
+
     // Corre en otro hilo para que el checkout no espere a Gmail. El try/catch va aca porque el que llama
     // ya no puede atrapar los errores. Las relaciones que usa el mail son EAGER: no necesitan sesion abierta.
     @Override
@@ -106,6 +110,37 @@ public class MailServiceImpl implements MailService {
 
         mailSender.send(mensaje);
         log.info("Mail de confirmación de la orden {} enviado a {}.", orden.getId(), orden.getUsuario().getEmail());
+    }
+
+    @Override
+    @Async
+    public void enviarNuevaFuncionFavorita(NuevaFuncionMail datos) {
+        if (remitente == null || remitente.isBlank()) {
+            log.info("No se envía el aviso de nueva función a {}: MAIL_USERNAME no está configurado.", datos.email());
+            return;
+        }
+
+        try {
+            MimeMessage mensaje = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
+            helper.setFrom(remitente, "Lumière Cine");
+            helper.setTo(datos.email());
+            helper.setSubject("Hay una nueva función de " + datos.pelicula() + " - Lumière Cine");
+            helper.setText(armarHtmlNuevaFuncion(datos), true);
+            helper.addInline("logo", new ClassPathResource("mail/lumiere-logotipo.png"), "image/png");
+
+            mailSender.send(mensaje);
+            log.info("Aviso de nueva función de {} enviado a {}.", datos.pelicula(), datos.email());
+        } catch (Exception e) {
+            log.error("No se pudo enviar el aviso de nueva función de {} a {}.", datos.pelicula(), datos.email(), e);
+        }
+    }
+
+    private String armarHtmlNuevaFuncion(NuevaFuncionMail datos) throws IOException {
+        return completar(leerPlantilla("nueva-funcion.html"), Map.of(
+                "pelicula", HtmlUtils.htmlEscape(datos.pelicula()),
+                "urlFront", urlFront,
+                "peliculaId", datos.peliculaId()));
     }
 
     private byte[] generarQr(String texto) throws WriterException, IOException {
