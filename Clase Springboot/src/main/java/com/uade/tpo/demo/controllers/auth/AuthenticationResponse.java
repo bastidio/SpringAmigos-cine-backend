@@ -18,4 +18,8 @@ public class AuthenticationResponse {
 
     // "ADMIN" o "USER", para que el front no tenga que pedir /users/me despues del login.
     private String rol;
+
+    // Lo que usa el avatar del nav, asi se ve la foto sin pedir el perfil despues del login.
+    private String nombre;
+    private String fotoPerfil;
 }

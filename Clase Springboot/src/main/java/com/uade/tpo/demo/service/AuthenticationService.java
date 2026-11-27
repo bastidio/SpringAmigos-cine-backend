@@ -47,6 +47,8 @@ public class AuthenticationService {
                 return AuthenticationResponse.builder()
                                 .accessToken(jwtToken)
                                 .rol(user.getRol().name())
+                                .nombre(user.getNombre())
+                                .fotoPerfil(user.getFotoPerfil())
                                 .build();
         }
 
@@ -61,6 +63,8 @@ public class AuthenticationService {
                 return AuthenticationResponse.builder()
                                 .accessToken(jwtToken)
                                 .rol(user.getRol() != null ? user.getRol().name() : null)
+                                .nombre(user.getNombre())
+                                .fotoPerfil(user.getFotoPerfil())
                                 .build();
         }
 }
