@@ -64,6 +64,9 @@ public class MailServiceImpl implements MailService {
     @Value("${spring.mail.username:}")
     private String remitente;
 
+    @Value("${spring.mail.password:}")
+    private String claveMail;
+
     @Value("${app.front.url:http://localhost:5173}")
     private String urlFront;
 
@@ -72,8 +75,8 @@ public class MailServiceImpl implements MailService {
     @Override
     @Async
     public void enviarConfirmacionCompra(Orden orden) {
-        if (remitente == null || remitente.isBlank()) {
-            log.info("No se envía el mail de la orden {}: MAIL_USERNAME no está configurado.", orden.getId());
+        if (claveMail == null || claveMail.isBlank()) {
+            log.info("No se envía el mail de la orden {}: MAIL_PASSWORD no está configurado.", orden.getId());
             return;
         }
 
@@ -115,8 +118,8 @@ public class MailServiceImpl implements MailService {
     @Override
     @Async
     public void enviarNuevaFuncionFavorita(NuevaFuncionMail datos) {
-        if (remitente == null || remitente.isBlank()) {
-            log.info("No se envía el aviso de nueva función a {}: MAIL_USERNAME no está configurado.", datos.email());
+        if (claveMail == null || claveMail.isBlank()) {
+            log.info("No se envía el aviso de nueva función a {}: MAIL_PASSWORD no está configurado.", datos.email());
             return;
         }
 
