@@ -149,8 +149,9 @@ public class FuncionServiceIMPL implements FuncionService {
             LocalDateTime inicioExistente = existente.getHorario();
             LocalDateTime finExistente = finDeOcupacion(inicioExistente, existente.getPelicula().getDuracion());
             if (inicioNueva.isBefore(finExistente) && inicioExistente.isBefore(finNueva)) {
-                throw new IllegalStateException("La sala ya está ocupada de " + inicioExistente.format(formatoHora)
-                        + " a " + finExistente.format(formatoHora) + " por otra función.");
+                throw new IllegalStateException("Esta función terminaría a las " + finNueva.format(formatoHora)
+                        + " y se superpone con otra función de "
+                        + inicioExistente.format(formatoHora) + " a " + finExistente.format(formatoHora) + " en esta sala.");
             }
         }
     }
