@@ -57,10 +57,10 @@ public class PeliculaServiceIMPL implements PeliculaService {
             throws PeliculaNotFoundException {
         Map<String, String> errores = new LinkedHashMap<>();
         if (titulo == null || titulo.isBlank()) {
-            errores.put("titulo", "el titulo es obligatorio");
+            errores.put("titulo", "El título es obligatorio.");
         }
         if (duracion != null && duracion <= 0) {
-            errores.put("duracion", "la duracion debe ser mayor a 0");
+            errores.put("duracion", "La duración debe ser mayor a 0.");
         }
         if (!errores.isEmpty()) {
             throw new ValidacionException(errores);

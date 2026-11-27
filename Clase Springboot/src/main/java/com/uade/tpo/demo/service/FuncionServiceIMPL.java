@@ -125,18 +125,18 @@ public class FuncionServiceIMPL implements FuncionService {
         Map<String, String> errores = new LinkedHashMap<>();
 
         if (peliculaId == null) {
-            errores.put("pelicula_id", "la pelicula es obligatoria");
+            errores.put("pelicula_id", "La película es obligatoria.");
         }
         if (salaId == null) {
-            errores.put("sala_id", "la sala es obligatoria");
+            errores.put("sala_id", "La sala es obligatoria.");
         }
         if (horario == null) {
-            errores.put("horario", "el horario es obligatorio");
+            errores.put("horario", "El horario es obligatorio.");
         }
         if (precioBase == null) {
-            errores.put("precio_base", "el precio base es obligatorio");
+            errores.put("precio_base", "El precio base es obligatorio.");
         } else if (precioBase.signum() < 0) {
-            errores.put("precio_base", "el precio base no puede ser negativo");
+            errores.put("precio_base", "El precio base no puede ser negativo.");
         }
 
         if (!errores.isEmpty()) {

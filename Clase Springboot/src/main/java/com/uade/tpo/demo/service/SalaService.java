@@ -10,8 +10,8 @@ import java.util.Optional;
 public interface SalaService {
     List<Sala> getSalas();
     Optional<Sala> getSalaById(Long id);
-    Sala createSala(String nombre, Integer capacidad);
-    Sala updateSala(Long id, String nombre, Integer capacidad) throws SalaNotFoundException;
+    Sala createSala(String nombre, Integer capacidad, String tipo);
+    Sala updateSala(Long id, String nombre, Integer capacidad, String tipo) throws SalaNotFoundException;
 
     // Butacas de la sala para el mapa del panel admin.
     List<AsientoSalaResponse> getAsientosDeSala(Long salaId) throws SalaNotFoundException;

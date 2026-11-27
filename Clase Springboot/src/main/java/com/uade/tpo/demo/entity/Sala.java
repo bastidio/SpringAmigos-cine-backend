@@ -21,4 +21,7 @@ public class Sala {
 
     @Column
     private Integer capacidad;
+
+    @Column
+    private String tipo;
 }

@@ -35,7 +35,7 @@ public class CodigoDescuentoServiceIMPL implements CodigoDescuentoService {
         String normalizado = normalizar(codigo);
         Map<String, String> errores = validarPorcentaje(porcentaje);
         if (normalizado.isEmpty()) {
-            errores.put("codigo", "el codigo es obligatorio");
+            errores.put("codigo", "El código es obligatorio.");
         }
         if (!errores.isEmpty()) {
             throw new ValidacionException(errores);
@@ -113,9 +113,9 @@ public class CodigoDescuentoServiceIMPL implements CodigoDescuentoService {
     private Map<String, String> validarPorcentaje(Integer porcentaje) {
         Map<String, String> errores = new LinkedHashMap<>();
         if (porcentaje == null) {
-            errores.put("porcentaje", "el porcentaje es obligatorio");
+            errores.put("porcentaje", "El porcentaje es obligatorio.");
         } else if (porcentaje < 1 || porcentaje > 100) {
-            errores.put("porcentaje", "el porcentaje debe estar entre 1 y 100");
+            errores.put("porcentaje", "El porcentaje debe estar entre 1 y 100.");
         }
         return errores;
     }

@@ -43,7 +43,7 @@ public class SalaController {
 
     @PostMapping
     public ResponseEntity<Sala> createSala(@RequestBody SalaRequest salaRequest) {
-        Sala nuevaSala = salaService.createSala(salaRequest.getNombre(), salaRequest.getCapacidad());
+        Sala nuevaSala = salaService.createSala(salaRequest.getNombre(), salaRequest.getCapacidad(), salaRequest.getTipo());
         return ResponseEntity.created(URI.create("/salas/" + nuevaSala.getId())).body(nuevaSala);
     }
 
@@ -51,6 +51,6 @@ public class SalaController {
     @PutMapping("/{id}")
     public ResponseEntity<Sala> updateSala(@PathVariable Long id, @RequestBody SalaRequest salaRequest)
             throws SalaNotFoundException {
-        return ResponseEntity.ok(salaService.updateSala(id, salaRequest.getNombre(), salaRequest.getCapacidad()));
+        return ResponseEntity.ok(salaService.updateSala(id, salaRequest.getNombre(), salaRequest.getCapacidad(), salaRequest.getTipo()));
     }
 }

@@ -193,10 +193,10 @@ public class ProductoServiceIMPL implements ProductoService {
     @Override
     public Producto actualizarStock(Long id, Integer nuevoStock) throws ProductoNotFoundException {
         if (nuevoStock == null) {
-            throw new ValidacionException(Map.of("stock", "el stock es obligatorio"));
+            throw new ValidacionException(Map.of("stock", "El stock es obligatorio."));
         }
         if (nuevoStock < 0) {
-            throw new ValidacionException(Map.of("stock", "el stock no puede ser negativo"));
+            throw new ValidacionException(Map.of("stock", "El stock no puede ser negativo."));
         }
         Producto producto = productoRepository.findById(id).orElseThrow(ProductoNotFoundException::new);
         producto.setStock(nuevoStock);
@@ -243,24 +243,24 @@ public class ProductoServiceIMPL implements ProductoService {
         Map<String, String> errores = new LinkedHashMap<>();
 
         if (categoriaId == null) {
-            errores.put("categoriaId", "la categoria es obligatoria");
+            errores.put("categoriaId", "La categoría es obligatoria.");
         }
         if (nombre == null || nombre.isBlank()) {
-            errores.put("nombre", "el nombre es obligatorio");
+            errores.put("nombre", "El nombre es obligatorio.");
         }
         if (precio == null) {
-            errores.put("precio", "el precio es obligatorio");
+            errores.put("precio", "El precio es obligatorio.");
         } else if (precio.signum() <= 0) {
-            errores.put("precio", "el precio debe ser mayor a 0");
+            errores.put("precio", "El precio debe ser mayor a 0.");
         }
         if (stock == null) {
-            errores.put("stock", "el stock es obligatorio");
+            errores.put("stock", "El stock es obligatorio.");
         } else if (stock < 0) {
-            errores.put("stock", "el stock no puede ser negativo");
+            errores.put("stock", "El stock no puede ser negativo.");
         }
         if (descuento != null
                 && (descuento.signum() < 0 || descuento.compareTo(BigDecimal.valueOf(100)) > 0)) {
-            errores.put("descuento", "el descuento debe estar entre 0 y 100");
+            errores.put("descuento", "El descuento debe estar entre 0 y 100.");
         }
 
         if (!errores.isEmpty()) {

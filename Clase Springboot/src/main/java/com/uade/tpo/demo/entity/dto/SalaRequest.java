@@ -6,4 +6,5 @@ import lombok.Data;
 public class SalaRequest {
     private String nombre;
     private Integer capacidad;
+    private String tipo;
 }
