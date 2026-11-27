@@ -57,7 +57,8 @@ public class EntradaServiceIMPL implements EntradaService {
                 entrada.getFuncion().getHorario(),
                 entrada.getAsiento().getFila(),
                 entrada.getAsiento().getNumero(),
-                entrada.getPrecio());
+                entrada.getPrecio(),
+                entrada.getFuncion().getPelicula().getDuracion());
     }
 
     @Override

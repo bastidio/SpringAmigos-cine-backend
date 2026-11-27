@@ -17,4 +17,5 @@ public class EntradaResponse {
     private Integer fila;
     private Integer numero;
     private BigDecimal precio;
+    private Integer duracion;
 }
