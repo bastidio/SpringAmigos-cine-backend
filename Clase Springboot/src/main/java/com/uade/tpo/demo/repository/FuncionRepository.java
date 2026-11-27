@@ -16,4 +16,7 @@ public interface FuncionRepository extends JpaRepository<Funcion, Long> {
 
     // Para no borrar una pelicula que todavia tiene funciones (la FK lo impediria con un 500).
     boolean existsByPeliculaId(Long peliculaId);
+
+    // Para validar que la sala no tenga funciones superpuestas.
+    List<Funcion> findBySalaId(Long salaId);
 }

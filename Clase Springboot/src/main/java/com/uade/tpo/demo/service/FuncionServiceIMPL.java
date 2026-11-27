@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,9 @@ import java.util.Optional;
 
 @Service
 public class FuncionServiceIMPL implements FuncionService {
+
+    // Despues de cada funcion la sala queda ocupada este tiempo para la limpieza.
+    private static final int MINUTOS_LIMPIEZA = 15;
 
     @Autowired
     private FuncionRepository funcionRepository;
@@ -58,11 +62,13 @@ public class FuncionServiceIMPL implements FuncionService {
     @Override
     public Funcion createFuncion(Long peliculaId, Long salaId, LocalDateTime horario, String idioma, String formato, BigDecimal precioBase)
             throws PeliculaNotFoundException, SalaNotFoundException {
+        validarDatosFuncion(peliculaId, salaId, horario, precioBase);
 
         Pelicula pelicula = peliculaRepository.findById(peliculaId)
                 .orElseThrow(PeliculaNotFoundException::new);
         Sala sala = salaRepository.findById(salaId)
                 .orElseThrow(SalaNotFoundException::new);
+        validarSalaLibre(salaId, horario, pelicula.getDuracion(), null);
 
         Funcion nuevaFuncion = new Funcion();
         nuevaFuncion.setPelicula(pelicula);
@@ -85,12 +91,13 @@ public class FuncionServiceIMPL implements FuncionService {
                 .orElseThrow(PeliculaNotFoundException::new);
         Sala sala = salaRepository.findById(salaId)
                 .orElseThrow(SalaNotFoundException::new);
+        validarSalaLibre(salaId, horario, pelicula.getDuracion(), id);
 
         // Las entradas vendidas apuntan a asientos de la sala actual: cambiarla las dejaria inconsistentes.
         boolean cambiaSala = funcion.getSala() == null || !funcion.getSala().getId().equals(salaId);
         if (cambiaSala && entradaRepository.countByFuncionId(id) > 0) {
             throw new IllegalStateException(
-                    "No se puede cambiar la sala de la funcion porque ya tiene entradas vendidas");
+                    "No se puede cambiar la sala de la función porque ya tiene entradas vendidas.");
         }
 
         funcion.setPelicula(pelicula);
@@ -118,6 +125,34 @@ public class FuncionServiceIMPL implements FuncionService {
                 funcion.getFormato(),
                 funcion.getPrecio_base(),
                 entradaRepository.countByFuncionId(funcion.getId()));
+    }
+
+    // Una funcion ocupa la sala desde su horario hasta que termina la pelicula mas la limpieza.
+    private LocalDateTime finDeOcupacion(LocalDateTime horario, Integer duracionMinutos) {
+        int duracion = duracionMinutos == null ? 0 : duracionMinutos;
+        return horario.plusMinutes(duracion + MINUTOS_LIMPIEZA);
+    }
+
+    // Al editar se excluye la propia funcion; al crear idFuncionExcluir es null.
+    private void validarSalaLibre(Long salaId, LocalDateTime horario, Integer duracionMinutos, Long idFuncionExcluir) {
+        if (horario == null) {
+            return;
+        }
+        LocalDateTime inicioNueva = horario;
+        LocalDateTime finNueva = finDeOcupacion(horario, duracionMinutos);
+        DateTimeFormatter formatoHora = DateTimeFormatter.ofPattern("HH:mm");
+
+        for (Funcion existente : funcionRepository.findBySalaId(salaId)) {
+            if (existente.getId().equals(idFuncionExcluir)) {
+                continue;
+            }
+            LocalDateTime inicioExistente = existente.getHorario();
+            LocalDateTime finExistente = finDeOcupacion(inicioExistente, existente.getPelicula().getDuracion());
+            if (inicioNueva.isBefore(finExistente) && inicioExistente.isBefore(finNueva)) {
+                throw new IllegalStateException("La sala ya está ocupada de " + inicioExistente.format(formatoHora)
+                        + " a " + finExistente.format(formatoHora) + " por otra función.");
+            }
+        }
     }
 
     // Mismo criterio que ProductoServiceIMPL: junta los errores y corta con 400.
